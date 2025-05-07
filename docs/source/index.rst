@@ -2,7 +2,7 @@
 Freenove_Sphinx_Rst
 ######################################################
 
-本文档旨在指导开发者使用Sphinx编写在线文档并部署至Read the Docs平台
+This document aims to guide developers in using Sphinx to write online documentation and deploy it to the Read the Docs platform.
 
 .. toctree::
    :maxdepth: 1
