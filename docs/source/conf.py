@@ -15,7 +15,7 @@ sys.path.insert(0, pathlib.Path(__file__).parents[2].resolve().as_posix())
 # os.system("rm -r freenove_Kit")
 # os.system("git clone --depth 1 这里放对应的Github地址 freenove_Kit")
 
-project = "freenove_sphinx_rst" #这里要写名称，网页标签会显示的！！！！！！！！！！！！！
+project = "freenove_sphinx_rst" 
 # <!!!BEGIN!!!>
 copyright = '2016-2025, Freenove'
 author = 'Freenove'
@@ -34,9 +34,15 @@ extensions = [
     "sphinx.ext.extlinks",
     "sphinx.ext.autosectionlabel",
     "sphinxcontrib.googleanalytics",
+    'sphinx.ext.mathjax',
     # "sphinx_favicon"
 ]
-
+mathjax_path = "https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"
+mathjax3_config = {
+    'TeX': {
+        'extensions': ['AMSmath.js', 'AMSsymbols.js', 'boldsymbol.js']
+    }
+}
 autosectionlabel_prefix_document = True
 googleanalytics_id="G-THC0SQQTDX"
 
@@ -84,8 +90,11 @@ gettext_uuid = True  # optional.
 
 rst_prolog = """
 .. include:: <s5defs.txt>
-.. include:: ../../../_static/style/custom-style.txt
+.. include:: /_static/style/custom-style.txt
 """
+
+pygments_style = 'monokai'       # dark style
+# pygments_style = 'github-dark' # github dark style
 
 variables_to_export = [
     "project",
@@ -128,7 +137,7 @@ intersphinx_disabled_reftypes = ["*"]
 
 def setup(app):
     pass
-    # app.add_css_file("css/custom.css")
+    # app.add_css_file("")
     # app.add_css_file('https://cdn.jsdelivr.net/gh/Freenove/freenove-docs/docs/source/_static/css/custom.css')
 
 suppress_warnings = ['autosectionlabel.*']
