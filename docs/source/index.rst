@@ -15,3 +15,4 @@ Freenove Sphinx Rst
    Freenove_Sphinx_Rst/codes/tutorial/Local_Compilation.rst
    Freenove_Sphinx_Rst/codes/tutorial/Common_Grammar.rst
    Freenove_Sphinx_Rst/codes/tutorial/Tools.rst
+   Freenove_Sphinx_Rst/codes/tutorial/deployment.rst
