@@ -51,8 +51,9 @@
 
     pip install -r requirements.txt
 
-.. image:: ../_static/imgs/Local_Compilation/Local04.png
-    :align: center
+.. note:: 
+    
+    要在WSL中安装运行此指令！
 
 3.3 本地编译 (以本项目为例)
 *******************************
