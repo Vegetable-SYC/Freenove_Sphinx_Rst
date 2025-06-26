@@ -9,11 +9,30 @@ from datetime import datetime
 import os
 import pathlib
 import sys
+import subprocess
 
 sys.path.insert(0, pathlib.Path(__file__).parents[2].resolve().as_posix())
 
-# os.system("rm -r freenove_Kit")
-# os.system("git clone --depth 1 这里放对应的Github地址 freenove_Kit")
+repo_url = "https://github.com/Vegetable-SYC/fnk0022-docs"
+clone_dir = "a" # 你的仓库克隆后的文件夹名
+
+# 检查目录是否已经存在
+if not os.path.isdir(clone_dir):
+    print(f"Cloning external repository: {repo_url}")
+    # 如果不存在，执行 git clone
+    subprocess.run(
+        ['git', 'clone', repo_url, clone_dir], 
+        check=True
+    )
+else:
+    print(f"External repository exists. Pulling latest changes from {clone_dir}")
+    # 如果存在，进入该目录执行 git pull
+    # 注意: 使用 cwd (current working directory) 参数
+    subprocess.run(
+        ['git', 'pull'], 
+        cwd=clone_dir, 
+        check=True
+    )
 
 project = "freenove_sphinx_rst" 
 # <!!!BEGIN!!!>
