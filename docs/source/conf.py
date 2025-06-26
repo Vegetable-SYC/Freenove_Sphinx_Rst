@@ -13,8 +13,8 @@ import subprocess
 
 sys.path.insert(0, pathlib.Path(__file__).parents[2].resolve().as_posix())
 
-os.system("rm -r a")
-os.system("git clone --depth 1 https://github.com/Vegetable-SYC/fnk0022-docs a")
+# os.system("rm -r a")
+# os.system("git clone --depth 1 https://github.com/Vegetable-SYC/fnk0022-docs a")
 
 project = "freenove_sphinx_rst" 
 # <!!!BEGIN!!!>
