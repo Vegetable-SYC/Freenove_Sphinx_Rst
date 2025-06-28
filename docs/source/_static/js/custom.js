@@ -1159,67 +1159,75 @@ function addFontAwesome() {
 }
 
 /**
- * 基于 Read the Docs 环境创建页面结构，并确保在本地开发时也能正常显示。
- * - 解决了本地编译时按钮不显示的问题。
- * - 解决了因环境变量缺失导致下载链接为 'undefined' 的问题。
+ * [最终诊断修复版]
+ * 创建页面控件，内置诊断日志，并对所有可能情况进行健壮性处理。
+ * 1. 确保在任何环境（本地/服务器）下都能正确显示按钮和图标。
+ * 2. 通过详细日志，让你能清楚地知道脚本的运行状态。
+ * 3. 对 RTD 环境变量进行逐一检查，防止出现 `undefined`。
  */
 function createPageContent() {
-    // 1. 定义备用(Fallback)数据
-    // 当不在 Read the Docs 服务器上时，READTHEDOCS_DATA 对象不存在。
-    // 我们创建一个备用对象，让脚本在本地也能正常运行并显示按钮。
-    const fallbackData = {
-        project: 'local-preview',
-        version: 'latest',
-        language: 'zh-cn', // 根据你的链接，默认设为中文
-    };
+    console.log("createPageContent: 函数开始执行。");
 
-    // 2. 判断环境并获取数据
-    // 使用逻辑 "或" (||) 操作符：如果 READTHEDOCS_DATA 存在，就使用它；否则，使用我们的备用数据。
-    const rtdData = window.READTHEDOCS_DATA || fallbackData;
+    // --- 步骤 1: 诊断并安全地获取数据 ---
 
-    // 只有在本地环境时，才在控制台打印提示信息，方便调试。
-    if (!window.READTHEDOCS_DATA) {
-        console.warn('当前为本地预览环境，下载按钮将使用备用链接。');
+    // 检查 READTHEDOCS_DATA 是否存在
+    const hasRtdData = typeof window.READTHEDOCS_DATA !== 'undefined' && window.READTHEDOCS_DATA !== null;
+    console.log(`createPageContent: 是否在 Read the Docs 环境? -> ${hasRtdData}`);
+
+    // 打印原始 RTD 对象，这是最重要的调试信息
+    if (hasRtdData) {
+        console.log("createPageContent: 原始 READTHEDOCS_DATA 对象内容:", window.READTHEDOCS_DATA);
     }
 
-    // 3. 从最终确定的数据源中安全地获取信息
-    const { project, version, language } = rtdData;
+    // 无论在何种环境，都确保 rtdData 是一个有效的对象
+    const rtdData = hasRtdData ? window.READTHEDOCS_DATA : {};
 
-    // 4. 构建下载 URL
-    // 这个 URL 现在无论是本地还是服务器，都总能被正确构建。
+    // --- 步骤 2: 逐一安全地获取每个属性，并提供备用值 ---
+    // 这样做可以防止 READTHEDOCS_DATA 中缺少某个键值对时导致 'undefined'
+    const project = rtdData.project || 'local-project';
+    const version = rtdData.version || 'latest';
+    // 根据你的链接，备用语言使用 'zh-cn'
+    const language = rtdData.language || 'zh-cn';
+
+    console.log(`createPageContent: 使用的数据 -> project='${project}', version='${version}', language='${language}'`);
+
+    // --- 步骤 3: 构建最终的下载 URL ---
     const htmlDownloadUrl = `/_/downloads/${language}/${version}/htmlzip/`;
+    console.log(`createPageContent: 构建的下载链接 -> ${htmlDownloadUrl}`);
 
     const body = document.body;
+
+    // --- 步骤 4: 创建按钮（和之前的逻辑相同，但现在数据源是绝对可靠的）---
+
+    // 如果控件已存在，则不再创建，防止重复执行
+    if (document.querySelector('.rtd-controls')) {
+        console.warn("createPageContent: .rtd-controls 控件已存在，停止执行以防重复创建。");
+        return;
+    }
     
-    // 创建右侧控制按钮容器
     const rtdControls = document.createElement('div');
     rtdControls.className = 'rtd-controls';
     
-    // 5. 更新按钮配置数组
     const controlsData = [
         {href: "https://github.com/Freenove", target: "_blank", className: "github-btn", icon: "fab fa-github", tooltip: "GitHub"},
-        {href: "https://freenove.com/", target: "_blank", className: "website-btn", tooltip: "freenove"}, // 在本地测试发现这里没有icon，为你加上
-        {href: "https://www.youtube.com/@Freenove", target: "_blank", className: "youtube", icon: "fab fa-youtube", tooltip: "youtube"}, // target: "_blank" 让你在油管打开新页面
-        // --- 经过增强的下载按钮 ---
+        {href: "https://freenove.com/", target: "_blank", className: "website-btn", icon: "fas fa-globe", tooltip: "freenove官网"},
+        {href: "https://www.youtube.com/@Freenove", target: "_blank", className: "youtube", icon: "fab fa-youtube", tooltip: "youtube"},
         {
-            href: htmlDownloadUrl, // 使用安全构建的 URL
+            href: htmlDownloadUrl,
             className: "download-btn", 
             icon: "fas fa-download",
             tooltip: "下载HTML文档",
-            download: `${project}-${version}.zip` // 文件名也能安全生成
+            download: `${project}-${version}.zip` 
         }
     ];
     
-    // 循环创建每个控制按钮
     controlsData.forEach(data => {
         const link = document.createElement('a');
         link.href = data.href;
         if (data.target) link.target = data.target;
         if (data.download) link.setAttribute('download', data.download);
-        
         link.className = `control-btn ${data.className}`;
         
-        // 你的原始代码中第二个按钮没有图标，我在这里也兼容了
         if (data.icon) {
             const icon = document.createElement('i');
             icon.className = data.icon;
@@ -1236,12 +1244,24 @@ function createPageContent() {
     
     body.appendChild(rtdControls);
     
-    // 创建主内容容器 (此部分与原始模板保持一致)
-    const container = document.createElement('div');
-    container.className = 'container';
-    
-    body.appendChild(container);
+    // 创建主内容容器 (如果你的页面已有布局，可以注释掉这部分)
+    if (!document.querySelector('.container')) {
+        const container = document.createElement('div');
+        container.className = 'container';
+        body.appendChild(container);
+    }
+
+    console.log("createPageContent: 控件已成功创建并添加到页面。");
 }
+
+// 使用 try-catch 包装并确保在 DOM 加载后执行
+document.addEventListener('DOMContentLoaded', () => {
+    try {
+        createPageContent();
+    } catch (error) {
+        console.error("在执行 createPageContent 时发生严重错误:", error);
+    }
+});
 
 /**
  * Adds ripple click effects to all control buttons

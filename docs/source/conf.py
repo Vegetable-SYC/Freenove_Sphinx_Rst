@@ -23,15 +23,6 @@ author = 'Freenove'
 release = 'v1.0.0'
 version = 'v1.0.0'
 
-current_doc = 'default_doc'  # 默认值
-if 'READTHEDOCS_PROJECT' in os.environ:
-    current_doc = os.environ.get('READTHEDOCS_PROJECT', 'default_doc')
-
-# 暴露给模板的变量
-html_context = {
-    'DOC_DOWNLOAD_URL': f'https://readthedocs.org/projects/{current_doc}/downloads/htmlzip/latest/' 
-}
-
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
 
