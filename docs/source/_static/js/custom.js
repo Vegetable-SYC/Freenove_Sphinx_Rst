@@ -1158,107 +1158,153 @@ function addFontAwesome() {
     document.head.appendChild(link);
 }
 
+/**
+ * @file This script dynamically creates a set of floating action buttons on the page.
+ * It is designed to work in two environments:
+ * 1. Online on Read the Docs: It uses the `READTHEDOCS_DATA` global object to create a functional download link.
+ * 2. Locally: It still displays all buttons for a consistent look, but the download button is visually disabled
+ *    and its link is inactive.
+ * This script relies on an external CSS file for styling.
+ */
+
 function createPageContent() {
-    
-    // --- 步骤 1: 核心逻辑的执行函数 ---
-    // 我们将所有创建按钮的逻辑封装在一个独立的函数 internalSetup 中。
-    const internalSetup = () => {
-        // 防止重复执行，这是一个很好的防御性编程习惯。
-        if (document.querySelector('.rtd-controls-freenove')) {
+
+    /**
+     * Core function to set up and inject the control buttons into the DOM.
+     * This function handles all the logic for creating elements and determining the environment.
+     */
+    const setupControls = () => {
+
+        // --- 1. Prevent Duplicate Execution ---
+        // A defensive check to ensure the controls are only added to the page once.
+        // If an element with the '.rtd-controls' class already exists, exit the function.
+        if (document.querySelector('.rtd-controls')) {
             return;
         }
 
-        // 此时，我们已确定 READTHEDOCS_DATA 存在，可以安全使用。
-        const rtdData = window.READTHEDOCS_DATA;
+        // --- 2. Environment Variable Setup ---
+        // Initialize variables with default values suitable for a local environment.
+        // These will be overridden if the script detects it's running on Read the Docs.
+        let project = 'documentation';            // Default project name for local builds.
+        let version = 'local-build';              // Default version name for local builds.
+        let htmlDownloadUrl = '#';                // Inactive link for local environment.
+        let downloadTooltip = 'Download (Online Only)'; // Tooltip indicating the feature is for online use.
+        let downloadAttribute = null;             // The 'download' attribute is not set locally.
 
-        // 为以防万一，再次进行安全检查，提供备用值。
-        const project = rtdData.project || 'project';
-        const version = rtdData.version || 'latest';
-        const language = rtdData.language || 'en';
-        
-        // 构建下载链接
-        const htmlDownloadUrl = `/_/downloads/${language}/${version}/htmlzip/`;
+        // Check if the script is running in a Read the Docs environment by looking for the global object.
+        if (typeof window.READTHEDOCS_DATA !== 'undefined' && window.READTHEDOCS_DATA) {
+            // If we are online, override the default variables with live data.
+            const rtdData = window.READTHEDOCS_DATA;
 
+            // Use the live data, but keep the defaults as a fallback for robustness.
+            project = rtdData.project || project;
+            version = rtdData.version || version;
+            const language = rtdData.language || 'en';
+
+            // Construct the real download URL provided by Read the Docs.
+            htmlDownloadUrl = `/_/downloads/${language}/${version}/htmlzip/`;
+            // Set the filename for the download attribute.
+            downloadAttribute = `${project}-${version}.zip`;
+            // Update the tooltip to reflect a functional button.
+            downloadTooltip = 'Download HTML';
+
+        } else {
+            // If not in an online RTD environment, log a message to the console for easier debugging.
+            console.warn('Freenove Controls: Not in a Read the Docs environment. Download link is disabled.');
+        }
+
+        // --- 3. DOM Element Creation ---
+        // Get a reference to the document body to append elements.
         const body = document.body;
+        // Create the main container for the control buttons.
         const rtdControls = document.createElement('div');
-        // 使用一个更独特的类名，以避免与任何RTD内置样式冲突。
-        rtdControls.className = 'rtd-controls-freenove';
-        
-        // 按钮配置数据，所有硬编码的 href 都是字符串字面量，保证安全。
+        rtdControls.className = 'rtd-controls';
+
+        // --- 4. Button Configuration ---
+        // An array of objects defining the properties for each button.
+        // This data-driven approach makes it easy to add, remove, or modify buttons.
         const controlsData = [
-            {href: "https://github.com/Freenove", target: "_blank", className: "github-btn", icon: "fab fa-github", tooltip: "GitHub"},
-            {href: "https://freenove.com/", target: "_blank", className: "website-btn", tooltip: "freenove"}, // 在这里保留了你的原始结构
-            {href: "https://www.youtube.com/@Freenove", className: "youtube", icon: "fab fa-youtube", tooltip: "youtube"},
+            { href: "https://github.com/Freenove", target: "_blank", className: "github-btn", icon: "fab fa-github", tooltip: "GitHub" },
+            { href: "https://freenove.com/", target: "_blank", className: "website-btn", tooltip: "freenove" },
+            { href: "https://www.youtube.com/@Freenove", target: "_blank", className: "youtube", icon: "fab fa-youtube", tooltip: "YouTube" },
             {
-                href: htmlDownloadUrl, // 这是唯一一个动态链接
-                className: "download-btn", 
-                icon: "fas fa-download", 
-                tooltip: "下载HTML文档",
-                download: `${project}-${version}.zip` 
+                href: htmlDownloadUrl,       // Uses the URL determined by the environment.
+                className: "download-btn",
+                icon: "fas fa-download",
+                tooltip: downloadTooltip,    // Uses the tooltip text determined by the environment.
+                download: downloadAttribute  // Is null locally, or a filename online.
             }
         ];
-        
-        // 循环创建每个按钮 (与你的原始代码一致)
+
+        // --- 5. Button Generation Loop ---
+        // Iterate over the configuration data to build each button dynamically.
         controlsData.forEach(data => {
+            // Create the anchor element which serves as the button.
             const link = document.createElement('a');
             link.href = data.href;
-            if (data.target) link.target = data.target;
-            if (data.download) link.setAttribute('download', data.download);
-            
+
+            // Set the target attribute for opening in a new tab if specified.
+            if (data.target) {
+                link.target = data.target;
+            }
+
+            // Set the 'download' attribute only when it's not null (i.e., in online mode).
+            if (data.download) {
+                link.setAttribute('download', data.download);
+            }
+
+            // Add the 'disabled' class to the download button in local mode.
+            // This allows the external CSS file to style it as an inactive button.
+            if (data.href === '#') {
+                link.classList.add('disabled');
+            }
+
+            // Apply the common and specific class names for styling.
             link.className = `control-btn ${data.className}`;
-            
+
+            // Check if the button should have an icon or text.
             if (data.icon) {
                 const icon = document.createElement('i');
-                icon.className = data.icon;
+                icon.className = data.icon; // Requires Font Awesome.
                 link.appendChild(icon);
+            } else if (data.text) {
+                // If no icon, use text content instead.
+                link.textContent = data.text;
             }
-            
+
+            // Create and append the tooltip element.
             const tooltip = document.createElement('span');
             tooltip.className = 'tooltip';
             tooltip.textContent = data.tooltip;
             link.appendChild(tooltip);
-            
+
+            // Append the fully constructed button to its container.
             rtdControls.appendChild(link);
         });
-        
+
+        // Append the main controls container to the document body.
         body.appendChild(rtdControls);
-        
-        // 你的原始代码中创建 .container 的部分，在这里保留。
-        const container = document.createElement('div');
-        container.className = 'container';
-        body.appendChild(container);
+
+        // This part creates an additional '.container' div, preserved from your original code.
+        // This might be required by your specific layout or other scripts.
+        if (!document.querySelector('.container')) {
+            const container = document.createElement('div');
+            container.className = 'container';
+            body.appendChild(container);
+        }
     };
 
-    // --- 步骤 2: 等待 READTHEDOCS_DATA 就绪的轮询检查器 ---
-    // 这是解决问题的关键。
-    let attempts = 0;
-    const maxAttempts = 50; // 最多尝试50次 (5秒)
-    const interval = 100;   // 每100毫秒检查一次
-
-    const checker = setInterval(() => {
-        // 检查 READTHEDOCS_DATA 是否已定义且不为null
-        if (typeof window.READTHEDOCS_DATA !== 'undefined' && window.READTHEDOCS_DATA) {
-            clearInterval(checker); // 停止轮询
-            internalSetup();      // 执行核心逻辑
-        } else {
-            attempts++;
-            if (attempts > maxAttempts) {
-                clearInterval(checker); // 超时，停止轮询
-                console.error("Freenove Controls: 等待 READTHEDOCS_DATA 超时。控件可能无法正确生成下载链接。");
-                // 可以在这里调用一个带有备用链接的 setup 版本，如果需要的话。
-            }
-        }
-    }, interval);
-}
-
-// 使用 try-catch 包装并确保在 DOM 加载后执行
-document.addEventListener('DOMContentLoaded', () => {
-    try {
-        createPageContent();
-    } catch (error) {
-        console.error("在执行 createPageContent 时发生严重错误:", error);
+    // --- Main Execution Logic ---
+    // We must ensure the DOM is fully loaded before trying to manipulate it.
+    // This prevents errors from trying to find 'document.body' before it exists.
+    if (document.readyState === 'loading') {
+        // If the document is still loading, wait for the DOMContentLoaded event.
+        document.addEventListener('DOMContentLoaded', setupControls);
+    } else {
+        // If the document has already loaded, execute the function immediately.
+        setupControls();
     }
-});
+}
 
 /**
  * Adds ripple click effects to all control buttons
