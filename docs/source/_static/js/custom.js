@@ -1159,145 +1159,65 @@ function addFontAwesome() {
 }
 
 /**
- * Creates the main page structure including:
- * - Right-aligned control buttons
- * - Main content container
+ * 基于 Read the Docs 环境创建页面结构，包括：
+ * - 右侧对齐的控制按钮
+ * - 将第四个按钮修改为动态的文档下载链接
  */
 function createPageContent() {
+    // 1. 检查是否存在 Read the Docs 的全局数据对象
+
+    // 2. 从 RTD 数据对象中获取项目信息
+    const project = READTHEDOCS_DATA.project;
+    const version = READTHEDOCS_DATA.version;
+    const language = READTHEDOCS_DATA.language;
+
+    // 3. 构建 HTML 压缩包的相对下载 URL
+    // 这是 RTD 的标准下载链接格式
+    const htmlDownloadUrl = `/_/downloads/${language}/${version}/htmlzip/`;
+
     const body = document.body;
     
-    // Create right-aligned control buttons container
+    // 创建右侧控制按钮容器
     const rtdControls = document.createElement('div');
     rtdControls.className = 'rtd-controls';
     
-    // Control buttons configuration
+    // 4. 更新按钮配置数组，修改第四个按钮
     const controlsData = [
         {href: "https://github.com/Freenove", target: "_blank", className: "github-btn", icon: "fab fa-github", tooltip: "GitHub"},
         {href: "https://freenove.com/", target: "_blank", className: "website-btn", tooltip: "freenove"},
         {href: "https://www.youtube.com/@Freenove", className: "youtube", icon: "fab fa-youtube", tooltip: "youtube"},
-        {className: "download-full-btn", icon: "fas fa-download", tooltip: "Download full documentation", action: downloadFullDocumentation}
+        // --- 修改后的下载按钮 ---
+        {
+            href: htmlDownloadUrl, // 使用动态生成的相对路径
+            className: "download-btn", // 使用更具描述性的类名
+            icon: "fas fa-download", // 更换为下载图标
+            tooltip: "下载HTML文档", // 更新提示文本
+            // 添加 download 属性，建议浏览器下载文件并指定文件名
+            download: `${project}-${version}.zip` 
+        }
     ];
     
-    // 创建右下角控制按钮
-    function createControlButtons() {
-        const controlsContainer = document.createElement('div');
-        controlsContainer.id = 'controls-container';
-        controlsContainer.style.position = 'fixed';
-        controlsContainer.style.bottom = '20px';
-        controlsContainer.style.right = '20px';
-        controlsContainer.style.zIndex = '1000';
-        controlsContainer.style.display = 'flex';
-        controlsContainer.style.flexDirection = 'column';
-        controlsContainer.style.gap = '10px';
-        
-        controlsData.forEach(control => {
-            const button = document.createElement('div');
-            button.className = `control-btn ${control.className}`;
-            button.title = control.tooltip;
-            
-            button.style.width = '40px';
-            button.style.height = '40px';
-            button.style.borderRadius = '50%';
-            button.style.backgroundColor = '#2980b9';
-            button.style.color = 'white';
-            button.style.display = 'flex';
-            button.style.alignItems = 'center';
-            button.style.justifyContent = 'center';
-            button.style.cursor = 'pointer';
-            button.style.boxShadow = '0 2px 10px rgba(0,0,0,0.2)';
-            button.style.transition = 'all 0.3s ease';
-            
-            button.innerHTML = `<i class="${control.icon}"></i>`;
-            
-            // 添加悬停效果
-            button.addEventListener('mouseenter', () => {
-                button.style.transform = 'scale(1.1)';
-                button.style.backgroundColor = '#3498db';
-            });
-            
-            button.addEventListener('mouseleave', () => {
-                button.style.transform = 'scale(1)';
-                button.style.backgroundColor = '#2980b9';
-            });
-            
-            // 绑定点击事件
-            if (control.action) {
-                button.addEventListener('click', control.action);
-            } else if (control.href) {
-                button.addEventListener('click', () => {
-                    window.open(control.href, control.target || '_blank');
-                });
-            }
-            
-            controlsContainer.appendChild(button);
-        });
-        
-        document.body.appendChild(controlsContainer);
-    }
-
-    function downloadFullDocumentation() {
-        // 获取当前文档名称
-        const getCurrentDocName = () => {
-            // 尝试从RTD环境变量获取
-            if (typeof READTHEDOCS_DATA !== 'undefined') {
-                return READTHEDOCS_DATA.project;
-            }
-            
-            // 尝试从URL路径解析
-            const pathSegments = window.location.pathname.split('/');
-            if (pathSegments.length > 2) {
-                return pathSegments[2]; // 通常格式: /projects/<project>/<lang>/<version>/
-            }
-            
-            // 默认值（本地开发时使用）
-            return 'freenove-docs';
-        };
-
-        const docName = getCurrentDocName();
-        const version = 'latest'; // 总是下载最新版
-        
-        // 构建下载URL
-        const downloadUrl = `https://readthedocs.org/projects/${docName}/downloads/htmlzip/${version}/`;
-        
-        // 创建隐藏的下载链接
-        const link = document.createElement('a');
-        link.href = downloadUrl;
-        link.download = `${docName}-${version}.zip`;
-        link.style.display = 'none';
-        
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        
-        // 添加下载反馈
-        const button = document.querySelector('.download-full-btn');
-        if (button) {
-            const originalIcon = button.innerHTML;
-            button.innerHTML = '<i class="fas fa-check"></i>';
-            button.style.backgroundColor = '#27ae60';
-            
-            setTimeout(() => {
-                button.innerHTML = originalIcon;
-                button.style.backgroundColor = '#2980b9';
-            }, 2000);
-        }
-    }
-
-    // Create each control button
+    // 循环创建每个控制按钮
     controlsData.forEach(data => {
         const link = document.createElement('a');
         link.href = data.href;
         if (data.target) link.target = data.target;
+
+        // 5. 新增：如果数据中包含 download 属性，则将其添加到 a 标签上
+        if (data.download) {
+            link.setAttribute('download', data.download);
+        }
+
         link.className = `control-btn ${data.className}`;
         
-        // Add icon if specified
+        // 添加图标
         if (data.icon) {
             const icon = document.createElement('i');
             icon.className = data.icon;
             link.appendChild(icon);
         }
         
-        // Add tooltip
+        // 添加工具提示
         const tooltip = document.createElement('span');
         tooltip.className = 'tooltip';
         tooltip.textContent = data.tooltip;
@@ -1308,7 +1228,7 @@ function createPageContent() {
     
     body.appendChild(rtdControls);
     
-    // Create main content container
+    // 创建主内容容器 (此部分与原始模板保持一致)
     const container = document.createElement('div');
     container.className = 'container';
     
@@ -1354,7 +1274,5 @@ function setupButtonEffects() {
 document.addEventListener('DOMContentLoaded', function() {
     createPageContent();   // Build page structure
     setupButtonEffects();  // Add interactive effects
-    // 初始化控制按钮
-    document.addEventListener('DOMContentLoaded', createControlButtons);
 });
 /* ---------------------------------------------------------------------------------------------- */
