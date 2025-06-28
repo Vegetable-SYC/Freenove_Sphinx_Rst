@@ -1168,135 +1168,95 @@ function addFontAwesome() {
  */
 
 function createPageContent() {
-    /**
-     * Core function to set up and inject the control buttons into the DOM.
-     * This function handles all the logic for creating elements and determining the environment.
-     */
-    const setupControls = () => {
-
-        // --- 1. Prevent Duplicate Execution ---
+    // --- 步骤 1: 核心逻辑的执行函数 ---
+    // 我们将所有创建按钮的逻辑封装在一个独立的函数 internalSetup 中。
+    const internalSetup = () => {
+        // 防止重复执行，这是一个很好的防御性编程习惯。
         if (document.querySelector('.rtd-controls')) {
             return;
         }
 
-        // --- 2. Environment Variable Setup ---
-        let project = 'documentation';
-        let version = 'local-build';
-        let htmlDownloadUrl = '#';
-        let downloadTooltip = 'Download (Online Only)';
-        let downloadAttribute = null;
+        // 此时，我们已确定 READTHEDOCS_DATA 存在，可以安全使用。
+        const rtdData = window.READTHEDOCS_DATA;
 
-        if (typeof window.READTHEDOCS_DATA !== 'undefined' && window.READTHEDOCS_DATA) {
-            const rtdData = window.READTHEDOCS_DATA;
-            project = rtdData.project || project;
-            version = rtdData.version || version;
-            const language = rtdData.language || 'en';
+        // 为以防万一，再次进行安全检查，提供备用值。
+        const project = rtdData.project || 'project';
+        const version = rtdData.version || 'latest';
+        const language = rtdData.language || 'en';
+        
+        // 构建下载链接
+        const htmlDownloadUrl = `/_/downloads/${language}/${version}/htmlzip/`;
 
-            htmlDownloadUrl = `/_/downloads/${language}/${version}/htmlzip/`;
-            downloadAttribute = `${project}-${version}.zip`;
-            downloadTooltip = 'Download HTML';
-        } else {
-            console.warn('Freenove Controls: Not in a Read the Docs environment. Download link is disabled.');
-        }
-
-        // --- 3. DOM Element Creation ---
         const body = document.body;
         const rtdControls = document.createElement('div');
+        // 使用一个更独特的类名，以避免与任何RTD内置样式冲突。
         rtdControls.className = 'rtd-controls';
-
-        // --- 4. Button Configuration ---
+        
+        // 按钮配置数据，所有硬编码的 href 都是字符串字面量，保证安全。
         const controlsData = [
-            { href: "https://github.com/Freenove", target: "_blank", className: "github-btn", icon: "fab fa-github", tooltip: "GitHub" },
-            // Note: Added `text` property to ensure the button has content, which is good practice.
-            { href: "https://freenove.com/", target: "_blank", className: "website-btn", tooltip: "freenove" },
-            { href: "https://www.youtube.com/@Freenove", target: "_blank", className: "youtube", icon: "fab fa-youtube", tooltip: "YouTube" },
+            {href: "https://github.com/Freenove", target: "_blank", className: "github-btn", icon: "fab fa-github", tooltip: "GitHub"},
+            {href: "https://freenove.com/", target: "_blank", className: "website-btn", tooltip: "freenove"}, // 在这里保留了你的原始结构
+            {href: "https://www.youtube.com/@Freenove", className: "youtube", icon: "fab fa-youtube", tooltip: "youtube"},
             {
-                href: htmlDownloadUrl,
-                className: "download-btn",
-                icon: "fas fa-download",
-                tooltip: downloadTooltip,
-                download: downloadAttribute
+                href: htmlDownloadUrl, // 这是唯一一个动态链接
+                className: "download-btn", 
+                icon: "fas fa-download", 
+                tooltip: "download html",
+                download: `${project}-${version}.zip` 
             }
         ];
-
-        // --- 5. Button Generation Loop ---
+        
+        // 循环创建每个按钮 (与你的原始代码一致)
         controlsData.forEach(data => {
             const link = document.createElement('a');
             link.href = data.href;
-
-            if (data.target) {
-                link.target = data.target;
-            }
-
-            // The 'download' attribute is still set for semantics and as a fallback.
-            if (data.download) {
-                link.setAttribute('download', data.download);
-            }
+            if (data.target) link.target = data.target;
+            if (data.download) link.setAttribute('download', data.download);
             
             link.className = `control-btn ${data.className}`;
-
-            if (data.href === '#') {
-                link.classList.add('disabled');
-            }
-
-            // ========================================================================
-            //                            *** THE FIX ***
-            // For the download button in the online environment, we add a special
-            // click handler to ensure the download is triggered reliably.
-            // ========================================================================
-            if (data.className === 'download-btn' && data.href !== '#') {
-                link.addEventListener('click', function(event) {
-                    // Prevent the default browser action for the link.
-                    event.preventDefault();
-
-                    // Create a temporary, invisible link element.
-                    const tempLink = document.createElement('a');
-                    tempLink.style.display = 'none';
-                    tempLink.href = this.href;
-                    tempLink.setAttribute('download', this.getAttribute('download'));
-                    
-                    // Add it to the body, click it, and then remove it.
-                    document.body.appendChild(tempLink);
-                    tempLink.click();
-                    document.body.removeChild(tempLink);
-                });
-            }
-
-            // --- Element content (icon or text) ---
+            
             if (data.icon) {
                 const icon = document.createElement('i');
                 icon.className = data.icon;
                 link.appendChild(icon);
-            } else if (data.text) {
-                link.textContent = data.text;
             }
-
-            // --- Tooltip ---
+            
             const tooltip = document.createElement('span');
             tooltip.className = 'tooltip';
             tooltip.textContent = data.tooltip;
             link.appendChild(tooltip);
-
+            
             rtdControls.appendChild(link);
         });
-
-        // Append the main controls container to the document body.
+        
         body.appendChild(rtdControls);
-
-        // Append the '.container' div if needed.
-        if (!document.querySelector('.container')) {
-            const container = document.createElement('div');
-            container.className = 'container';
-            body.appendChild(container);
-        }
+        
+        // 你的原始代码中创建 .container 的部分，在这里保留。
+        const container = document.createElement('div');
+        container.className = 'container';
+        body.appendChild(container);
     };
 
-    // --- Main Execution Logic ---
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', setupControls);
-    } else {
-        setupControls();
-    }
+    // --- 步骤 2: 等待 READTHEDOCS_DATA 就绪的轮询检查器 ---
+    // 这是解决问题的关键。
+    let attempts = 0;
+    const maxAttempts = 50; // 最多尝试50次 (5秒)
+    const interval = 100;   // 每100毫秒检查一次
+
+    const checker = setInterval(() => {
+        // 检查 READTHEDOCS_DATA 是否已定义且不为null
+        if (typeof window.READTHEDOCS_DATA !== 'undefined' && window.READTHEDOCS_DATA) {
+            clearInterval(checker); // 停止轮询
+            internalSetup();      // 执行核心逻辑
+        } else {
+            attempts++;
+            if (attempts > maxAttempts) {
+                clearInterval(checker); // 超时，停止轮询
+                console.error("Freenove Controls: 等待 READTHEDOCS_DATA 超时。控件可能无法正确生成下载链接。");
+                // 可以在这里调用一个带有备用链接的 setup 版本，如果需要的话。
+            }
+        }
+    }, interval);
 }
 
 /**
