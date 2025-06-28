@@ -1158,21 +1158,13 @@ function addFontAwesome() {
     document.head.appendChild(link);
 }
 
-/**
- * @file This script dynamically creates a set of floating action buttons on the page.
- * It is designed to work in two environments:
- * 1. Online on Read the Docs: It uses the `READTHEDOCS_DATA` global object to create a functional download link.
- * 2. Locally: It still displays all buttons for a consistent look, but the download button is visually disabled
- *    and its link is inactive.
- * This script relies on an external CSS file for styling.
- */
-
 function createPageContent() {
+    
     // --- 步骤 1: 核心逻辑的执行函数 ---
     // 我们将所有创建按钮的逻辑封装在一个独立的函数 internalSetup 中。
     const internalSetup = () => {
         // 防止重复执行，这是一个很好的防御性编程习惯。
-        if (document.querySelector('.rtd-controls')) {
+        if (document.querySelector('.rtd-controls-freenove')) {
             return;
         }
 
@@ -1190,7 +1182,7 @@ function createPageContent() {
         const body = document.body;
         const rtdControls = document.createElement('div');
         // 使用一个更独特的类名，以避免与任何RTD内置样式冲突。
-        rtdControls.className = 'rtd-controls';
+        rtdControls.className = 'rtd-controls-freenove';
         
         // 按钮配置数据，所有硬编码的 href 都是字符串字面量，保证安全。
         const controlsData = [
@@ -1201,7 +1193,7 @@ function createPageContent() {
                 href: htmlDownloadUrl, // 这是唯一一个动态链接
                 className: "download-btn", 
                 icon: "fas fa-download", 
-                tooltip: "download html",
+                tooltip: "下载HTML文档",
                 download: `${project}-${version}.zip` 
             }
         ];
@@ -1258,6 +1250,15 @@ function createPageContent() {
         }
     }, interval);
 }
+
+// 使用 try-catch 包装并确保在 DOM 加载后执行
+document.addEventListener('DOMContentLoaded', () => {
+    try {
+        createPageContent();
+    } catch (error) {
+        console.error("在执行 createPageContent 时发生严重错误:", error);
+    }
+});
 
 /**
  * Adds ripple click effects to all control buttons
