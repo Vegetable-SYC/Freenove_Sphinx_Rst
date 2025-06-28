@@ -1175,117 +1175,115 @@ function createPageContent() {
     const setupControls = () => {
 
         // --- 1. Prevent Duplicate Execution ---
-        // A defensive check to ensure the controls are only added to the page once.
-        // If an element with the '.rtd-controls' class already exists, exit the function.
         if (document.querySelector('.rtd-controls')) {
             return;
         }
 
         // --- 2. Environment Variable Setup ---
-        // Initialize variables with default values suitable for a local environment.
-        // These will be overridden if the script detects it's running on Read the Docs.
-        let project = 'documentation';            // Default project name for local builds.
-        let version = 'local-build';              // Default version name for local builds.
-        let htmlDownloadUrl = '#';                // Inactive link for local environment.
-        let downloadTooltip = 'Download (Online Only)'; // Tooltip indicating the feature is for online use.
-        let downloadAttribute = null;             // The 'download' attribute is not set locally.
+        let project = 'documentation';
+        let version = 'local-build';
+        let htmlDownloadUrl = '#';
+        let downloadTooltip = 'Download (Online Only)';
+        let downloadAttribute = null;
 
-        // Check if the script is running in a Read the Docs environment by looking for the global object.
         if (typeof window.READTHEDOCS_DATA !== 'undefined' && window.READTHEDOCS_DATA) {
-            // If we are online, override the default variables with live data.
             const rtdData = window.READTHEDOCS_DATA;
-
-            // Use the live data, but keep the defaults as a fallback for robustness.
             project = rtdData.project || project;
             version = rtdData.version || version;
             const language = rtdData.language || 'en';
 
-            // Construct the real download URL provided by Read the Docs.
             htmlDownloadUrl = `/_/downloads/${language}/${version}/htmlzip/`;
-            // Set the filename for the download attribute.
             downloadAttribute = `${project}-${version}.zip`;
-            // Update the tooltip to reflect a functional button.
             downloadTooltip = 'Download HTML';
-
         } else {
-            // If not in an online RTD environment, log a message to the console for easier debugging.
             console.warn('Freenove Controls: Not in a Read the Docs environment. Download link is disabled.');
         }
 
         // --- 3. DOM Element Creation ---
-        // Get a reference to the document body to append elements.
         const body = document.body;
-        // Create the main container for the control buttons.
         const rtdControls = document.createElement('div');
         rtdControls.className = 'rtd-controls';
 
         // --- 4. Button Configuration ---
-        // An array of objects defining the properties for each button.
-        // This data-driven approach makes it easy to add, remove, or modify buttons.
         const controlsData = [
             { href: "https://github.com/Freenove", target: "_blank", className: "github-btn", icon: "fab fa-github", tooltip: "GitHub" },
+            // Note: Added `text` property to ensure the button has content, which is good practice.
             { href: "https://freenove.com/", target: "_blank", className: "website-btn", tooltip: "freenove" },
             { href: "https://www.youtube.com/@Freenove", target: "_blank", className: "youtube", icon: "fab fa-youtube", tooltip: "YouTube" },
             {
-                href: htmlDownloadUrl,       // Uses the URL determined by the environment.
+                href: htmlDownloadUrl,
                 className: "download-btn",
                 icon: "fas fa-download",
-                tooltip: downloadTooltip,    // Uses the tooltip text determined by the environment.
-                download: downloadAttribute  // Is null locally, or a filename online.
+                tooltip: downloadTooltip,
+                download: downloadAttribute
             }
         ];
 
         // --- 5. Button Generation Loop ---
-        // Iterate over the configuration data to build each button dynamically.
         controlsData.forEach(data => {
-            // Create the anchor element which serves as the button.
             const link = document.createElement('a');
             link.href = data.href;
 
-            // Set the target attribute for opening in a new tab if specified.
             if (data.target) {
                 link.target = data.target;
             }
 
-            // Set the 'download' attribute only when it's not null (i.e., in online mode).
+            // The 'download' attribute is still set for semantics and as a fallback.
             if (data.download) {
                 link.setAttribute('download', data.download);
             }
+            
+            link.className = `control-btn ${data.className}`;
 
-            // Add the 'disabled' class to the download button in local mode.
-            // This allows the external CSS file to style it as an inactive button.
             if (data.href === '#') {
                 link.classList.add('disabled');
             }
 
-            // Apply the common and specific class names for styling.
-            link.className = `control-btn ${data.className}`;
+            // ========================================================================
+            //                            *** THE FIX ***
+            // For the download button in the online environment, we add a special
+            // click handler to ensure the download is triggered reliably.
+            // ========================================================================
+            if (data.className === 'download-btn' && data.href !== '#') {
+                link.addEventListener('click', function(event) {
+                    // Prevent the default browser action for the link.
+                    event.preventDefault();
 
-            // Check if the button should have an icon or text.
+                    // Create a temporary, invisible link element.
+                    const tempLink = document.createElement('a');
+                    tempLink.style.display = 'none';
+                    tempLink.href = this.href;
+                    tempLink.setAttribute('download', this.getAttribute('download'));
+                    
+                    // Add it to the body, click it, and then remove it.
+                    document.body.appendChild(tempLink);
+                    tempLink.click();
+                    document.body.removeChild(tempLink);
+                });
+            }
+
+            // --- Element content (icon or text) ---
             if (data.icon) {
                 const icon = document.createElement('i');
-                icon.className = data.icon; // Requires Font Awesome.
+                icon.className = data.icon;
                 link.appendChild(icon);
             } else if (data.text) {
-                // If no icon, use text content instead.
                 link.textContent = data.text;
             }
 
-            // Create and append the tooltip element.
+            // --- Tooltip ---
             const tooltip = document.createElement('span');
             tooltip.className = 'tooltip';
             tooltip.textContent = data.tooltip;
             link.appendChild(tooltip);
 
-            // Append the fully constructed button to its container.
             rtdControls.appendChild(link);
         });
 
         // Append the main controls container to the document body.
         body.appendChild(rtdControls);
 
-        // This part creates an additional '.container' div, preserved from your original code.
-        // This might be required by your specific layout or other scripts.
+        // Append the '.container' div if needed.
         if (!document.querySelector('.container')) {
             const container = document.createElement('div');
             container.className = 'container';
@@ -1294,13 +1292,9 @@ function createPageContent() {
     };
 
     // --- Main Execution Logic ---
-    // We must ensure the DOM is fully loaded before trying to manipulate it.
-    // This prevents errors from trying to find 'document.body' before it exists.
     if (document.readyState === 'loading') {
-        // If the document is still loading, wait for the DOMContentLoaded event.
         document.addEventListener('DOMContentLoaded', setupControls);
     } else {
-        // If the document has already loaded, execute the function immediately.
         setupControls();
     }
 }

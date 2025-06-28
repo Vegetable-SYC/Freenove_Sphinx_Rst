@@ -645,7 +645,7 @@ dl.c.function dt.sig.sig-object.c {
     display: flex;                  /* Flex container */
     flex-direction: column;         /* Vertical item arrangement */
     gap: 25px;                      /* Spacing between items */
-    z-index: 1003;                  /* Stacking order */
+    z-index: 1000;                  /* Stacking order */
 }
 
 /* Control styling */
@@ -711,7 +711,6 @@ dl.c.function dt.sig.sig-object.c {
 .control-btn:hover .tooltip {
     opacity: 0;     /* Hidden by default */
     transform: translateX(0);
-    pointer-events: none;
 }
 
 .tooltip {
@@ -731,7 +730,6 @@ dl.c.function dt.sig.sig-object.c {
 }
 
 .tooltip::after {
-    pointer-events: none;
     content: '';
     position: absolute;
     right: -10px;
