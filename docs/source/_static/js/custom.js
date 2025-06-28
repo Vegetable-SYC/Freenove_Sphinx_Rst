@@ -1158,100 +1158,97 @@ function addFontAwesome() {
     document.head.appendChild(link);
 }
 
-/**
- * [最终诊断修复版]
- * 创建页面控件，内置诊断日志，并对所有可能情况进行健壮性处理。
- * 1. 确保在任何环境（本地/服务器）下都能正确显示按钮和图标。
- * 2. 通过详细日志，让你能清楚地知道脚本的运行状态。
- * 3. 对 RTD 环境变量进行逐一检查，防止出现 `undefined`。
- */
 function createPageContent() {
-    console.log("createPageContent: 函数开始执行。");
-
-    // --- 步骤 1: 诊断并安全地获取数据 ---
-
-    // 检查 READTHEDOCS_DATA 是否存在
-    const hasRtdData = typeof window.READTHEDOCS_DATA !== 'undefined' && window.READTHEDOCS_DATA !== null;
-    console.log(`createPageContent: 是否在 Read the Docs 环境? -> ${hasRtdData}`);
-
-    // 打印原始 RTD 对象，这是最重要的调试信息
-    if (hasRtdData) {
-        console.log("createPageContent: 原始 READTHEDOCS_DATA 对象内容:", window.READTHEDOCS_DATA);
-    }
-
-    // 无论在何种环境，都确保 rtdData 是一个有效的对象
-    const rtdData = hasRtdData ? window.READTHEDOCS_DATA : {};
-
-    // --- 步骤 2: 逐一安全地获取每个属性，并提供备用值 ---
-    // 这样做可以防止 READTHEDOCS_DATA 中缺少某个键值对时导致 'undefined'
-    const project = rtdData.project || 'local-project';
-    const version = rtdData.version || 'latest';
-    // 根据你的链接，备用语言使用 'zh-cn'
-    const language = rtdData.language || 'zh-cn';
-
-    console.log(`createPageContent: 使用的数据 -> project='${project}', version='${version}', language='${language}'`);
-
-    // --- 步骤 3: 构建最终的下载 URL ---
-    const htmlDownloadUrl = `/_/downloads/${language}/${version}/htmlzip/`;
-    console.log(`createPageContent: 构建的下载链接 -> ${htmlDownloadUrl}`);
-
-    const body = document.body;
-
-    // --- 步骤 4: 创建按钮（和之前的逻辑相同，但现在数据源是绝对可靠的）---
-
-    // 如果控件已存在，则不再创建，防止重复执行
-    if (document.querySelector('.rtd-controls')) {
-        console.warn("createPageContent: .rtd-controls 控件已存在，停止执行以防重复创建。");
-        return;
-    }
     
-    const rtdControls = document.createElement('div');
-    rtdControls.className = 'rtd-controls';
-    
-    const controlsData = [
-        {href: "https://github.com/Freenove", target: "_blank", className: "github-btn", icon: "fab fa-github", tooltip: "GitHub"},
-        {href: "https://freenove.com/", target: "_blank", className: "website-btn", icon: "fas fa-globe", tooltip: "freenove官网"},
-        {href: "https://www.youtube.com/@Freenove", target: "_blank", className: "youtube", icon: "fab fa-youtube", tooltip: "youtube"},
-        {
-            href: htmlDownloadUrl,
-            className: "download-btn", 
-            icon: "fas fa-download",
-            tooltip: "下载HTML文档",
-            download: `${project}-${version}.zip` 
+    // --- 步骤 1: 核心逻辑的执行函数 ---
+    // 我们将所有创建按钮的逻辑封装在一个独立的函数 internalSetup 中。
+    const internalSetup = () => {
+        // 防止重复执行，这是一个很好的防御性编程习惯。
+        if (document.querySelector('.rtd-controls-freenove')) {
+            return;
         }
-    ];
-    
-    controlsData.forEach(data => {
-        const link = document.createElement('a');
-        link.href = data.href;
-        if (data.target) link.target = data.target;
-        if (data.download) link.setAttribute('download', data.download);
-        link.className = `control-btn ${data.className}`;
+
+        // 此时，我们已确定 READTHEDOCS_DATA 存在，可以安全使用。
+        const rtdData = window.READTHEDOCS_DATA;
+
+        // 为以防万一，再次进行安全检查，提供备用值。
+        const project = rtdData.project || 'project';
+        const version = rtdData.version || 'latest';
+        const language = rtdData.language || 'en';
         
-        if (data.icon) {
-            const icon = document.createElement('i');
-            icon.className = data.icon;
-            link.appendChild(icon);
-        }
+        // 构建下载链接
+        const htmlDownloadUrl = `/_/downloads/${language}/${version}/htmlzip/`;
+
+        const body = document.body;
+        const rtdControls = document.createElement('div');
+        // 使用一个更独特的类名，以避免与任何RTD内置样式冲突。
+        rtdControls.className = 'rtd-controls-freenove';
         
-        const tooltip = document.createElement('span');
-        tooltip.className = 'tooltip';
-        tooltip.textContent = data.tooltip;
-        link.appendChild(tooltip);
+        // 按钮配置数据，所有硬编码的 href 都是字符串字面量，保证安全。
+        const controlsData = [
+            {href: "https://github.com/Freenove", target: "_blank", className: "github-btn", icon: "fab fa-github", tooltip: "GitHub"},
+            {href: "https://freenove.com/", target: "_blank", className: "website-btn", tooltip: "freenove"}, // 在这里保留了你的原始结构
+            {href: "https://www.youtube.com/@Freenove", className: "youtube", icon: "fab fa-youtube", tooltip: "youtube"},
+            {
+                href: htmlDownloadUrl, // 这是唯一一个动态链接
+                className: "download-btn", 
+                icon: "fas fa-download", 
+                tooltip: "下载HTML文档",
+                download: `${project}-${version}.zip` 
+            }
+        ];
         
-        rtdControls.appendChild(link);
-    });
-    
-    body.appendChild(rtdControls);
-    
-    // 创建主内容容器 (如果你的页面已有布局，可以注释掉这部分)
-    if (!document.querySelector('.container')) {
+        // 循环创建每个按钮 (与你的原始代码一致)
+        controlsData.forEach(data => {
+            const link = document.createElement('a');
+            link.href = data.href;
+            if (data.target) link.target = data.target;
+            if (data.download) link.setAttribute('download', data.download);
+            
+            link.className = `control-btn ${data.className}`;
+            
+            if (data.icon) {
+                const icon = document.createElement('i');
+                icon.className = data.icon;
+                link.appendChild(icon);
+            }
+            
+            const tooltip = document.createElement('span');
+            tooltip.className = 'tooltip';
+            tooltip.textContent = data.tooltip;
+            link.appendChild(tooltip);
+            
+            rtdControls.appendChild(link);
+        });
+        
+        body.appendChild(rtdControls);
+        
+        // 你的原始代码中创建 .container 的部分，在这里保留。
         const container = document.createElement('div');
         container.className = 'container';
         body.appendChild(container);
-    }
+    };
 
-    console.log("createPageContent: 控件已成功创建并添加到页面。");
+    // --- 步骤 2: 等待 READTHEDOCS_DATA 就绪的轮询检查器 ---
+    // 这是解决问题的关键。
+    let attempts = 0;
+    const maxAttempts = 50; // 最多尝试50次 (5秒)
+    const interval = 100;   // 每100毫秒检查一次
+
+    const checker = setInterval(() => {
+        // 检查 READTHEDOCS_DATA 是否已定义且不为null
+        if (typeof window.READTHEDOCS_DATA !== 'undefined' && window.READTHEDOCS_DATA) {
+            clearInterval(checker); // 停止轮询
+            internalSetup();      // 执行核心逻辑
+        } else {
+            attempts++;
+            if (attempts > maxAttempts) {
+                clearInterval(checker); // 超时，停止轮询
+                console.error("Freenove Controls: 等待 READTHEDOCS_DATA 超时。控件可能无法正确生成下载链接。");
+                // 可以在这里调用一个带有备用链接的 setup 版本，如果需要的话。
+            }
+        }
+    }, interval);
 }
 
 // 使用 try-catch 包装并确保在 DOM 加载后执行
