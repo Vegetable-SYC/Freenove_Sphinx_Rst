@@ -1168,7 +1168,6 @@ function addFontAwesome() {
  */
 
 function createPageContent() {
-
     /**
      * Core function to set up and inject the control buttons into the DOM.
      * This function handles all the logic for creating elements and determining the environment.
