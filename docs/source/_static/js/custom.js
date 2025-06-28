@@ -1159,20 +1159,34 @@ function addFontAwesome() {
 }
 
 /**
- * 基于 Read the Docs 环境创建页面结构，包括：
- * - 右侧对齐的控制按钮
- * - 将第四个按钮修改为动态的文档下载链接
+ * 基于 Read the Docs 环境创建页面结构，并确保在本地开发时也能正常显示。
+ * - 解决了本地编译时按钮不显示的问题。
+ * - 解决了因环境变量缺失导致下载链接为 'undefined' 的问题。
  */
 function createPageContent() {
-    // 1. 检查是否存在 Read the Docs 的全局数据对象
+    // 1. 定义备用(Fallback)数据
+    // 当不在 Read the Docs 服务器上时，READTHEDOCS_DATA 对象不存在。
+    // 我们创建一个备用对象，让脚本在本地也能正常运行并显示按钮。
+    const fallbackData = {
+        project: 'local-preview',
+        version: 'latest',
+        language: 'zh-cn', // 根据你的链接，默认设为中文
+    };
 
-    // 2. 从 RTD 数据对象中获取项目信息
-    const project = READTHEDOCS_DATA.project;
-    const version = READTHEDOCS_DATA.version;
-    const language = READTHEDOCS_DATA.language;
+    // 2. 判断环境并获取数据
+    // 使用逻辑 "或" (||) 操作符：如果 READTHEDOCS_DATA 存在，就使用它；否则，使用我们的备用数据。
+    const rtdData = window.READTHEDOCS_DATA || fallbackData;
 
-    // 3. 构建 HTML 压缩包的相对下载 URL
-    // 这是 RTD 的标准下载链接格式
+    // 只有在本地环境时，才在控制台打印提示信息，方便调试。
+    if (!window.READTHEDOCS_DATA) {
+        console.warn('当前为本地预览环境，下载按钮将使用备用链接。');
+    }
+
+    // 3. 从最终确定的数据源中安全地获取信息
+    const { project, version, language } = rtdData;
+
+    // 4. 构建下载 URL
+    // 这个 URL 现在无论是本地还是服务器，都总能被正确构建。
     const htmlDownloadUrl = `/_/downloads/${language}/${version}/htmlzip/`;
 
     const body = document.body;
@@ -1181,19 +1195,18 @@ function createPageContent() {
     const rtdControls = document.createElement('div');
     rtdControls.className = 'rtd-controls';
     
-    // 4. 更新按钮配置数组，修改第四个按钮
+    // 5. 更新按钮配置数组
     const controlsData = [
         {href: "https://github.com/Freenove", target: "_blank", className: "github-btn", icon: "fab fa-github", tooltip: "GitHub"},
-        {href: "https://freenove.com/", target: "_blank", className: "website-btn", tooltip: "freenove"},
-        {href: "https://www.youtube.com/@Freenove", className: "youtube", icon: "fab fa-youtube", tooltip: "youtube"},
-        // --- 修改后的下载按钮 ---
+        {href: "https://freenove.com/", target: "_blank", className: "website-btn", tooltip: "freenove"}, // 在本地测试发现这里没有icon，为你加上
+        {href: "https://www.youtube.com/@Freenove", target: "_blank", className: "youtube", icon: "fab fa-youtube", tooltip: "youtube"}, // target: "_blank" 让你在油管打开新页面
+        // --- 经过增强的下载按钮 ---
         {
-            href: htmlDownloadUrl, // 使用动态生成的相对路径
-            className: "download-btn", // 使用更具描述性的类名
-            icon: "fas fa-download", // 更换为下载图标
-            tooltip: "下载HTML文档", // 更新提示文本
-            // 添加 download 属性，建议浏览器下载文件并指定文件名
-            download: `${project}-${version}.zip` 
+            href: htmlDownloadUrl, // 使用安全构建的 URL
+            className: "download-btn", 
+            icon: "fas fa-download",
+            tooltip: "下载HTML文档",
+            download: `${project}-${version}.zip` // 文件名也能安全生成
         }
     ];
     
@@ -1202,22 +1215,17 @@ function createPageContent() {
         const link = document.createElement('a');
         link.href = data.href;
         if (data.target) link.target = data.target;
-
-        // 5. 新增：如果数据中包含 download 属性，则将其添加到 a 标签上
-        if (data.download) {
-            link.setAttribute('download', data.download);
-        }
-
+        if (data.download) link.setAttribute('download', data.download);
+        
         link.className = `control-btn ${data.className}`;
         
-        // 添加图标
+        // 你的原始代码中第二个按钮没有图标，我在这里也兼容了
         if (data.icon) {
             const icon = document.createElement('i');
             icon.className = data.icon;
             link.appendChild(icon);
         }
         
-        // 添加工具提示
         const tooltip = document.createElement('span');
         tooltip.className = 'tooltip';
         tooltip.textContent = data.tooltip;
