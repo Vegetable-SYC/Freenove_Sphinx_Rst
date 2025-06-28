@@ -23,10 +23,6 @@ author = 'Freenove'
 release = 'v1.0.0'
 version = 'v1.0.0'
 
-formats:
-  - epub
-  - pdf
-
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
 
