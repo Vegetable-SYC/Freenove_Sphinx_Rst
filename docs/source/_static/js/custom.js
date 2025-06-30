@@ -1181,70 +1181,77 @@ function addFontAwesome() {
  */
 
 /**
- * 从当前页面的 URL 中解析出项目、版本和语言信息。
- * 这个函数被设计为可以同时兼容两种主流的文档URL结构：
- * 1. 子域名结构: https://<project>.readthedocs.io/<language>/<version>/
- * 2. 路径结构:   https://docs.freenove.com/projects/<project>/<language>/<version>/
+ * 从URL智能解析信息并生成与环境匹配的下载链接。
+ * 返回一个包含所有配置信息的对象。
+ * @returns {{project: string, language: string, version: string, htmlDownloadUrl: string}}
  */
-function getInfoFromUrl() {
-    const hostname = window.location.hostname; // e.g., "freenove-sphinx-rst.readthedocs.io" or "docs.freenove.com"
-    const pathParts = window.location.pathname.split('/').filter(part => part !== ''); // e.g., ["en", "latest"] or ["projects", "fnk0019", "en", "latest"]
+function getProjectConfigFromUrl() {
+    const hostname = window.location.hostname;
+    const pathParts = window.location.pathname.split('/').filter(part => part !== '');
 
+    // 默认值
     let project = 'unknown-project';
     let language = 'en';
     let version = 'latest';
+    let htmlDownloadUrl = '#'; // 默认一个安全的链接，以防万一
 
-    console.log("getInfoFromUrl: Analyzing URL:", window.location.href);
+    console.log("Analyzing URL:", window.location.href);
 
-    // --- 逻辑判断开始 ---
+    // --- 核心逻辑判断 ---
 
-    // 1. 检查是否为路径结构 (e.g., docs.freenove.com/projects/...)
+    // 1. 判断是否为“路径托管”环境 (e.g., docs.freenove.com/projects/...)
     if (pathParts.length >= 3 && pathParts[0] === 'projects') {
-        console.log("getInfoFromUrl: Detected 'Path-based' structure.");
+        console.log("Detected: 'Path-based' structure (e.g., docs.freenove.com).");
+        
         project = pathParts[1];
         language = pathParts[2];
-        version = pathParts[3] || 'latest'; // Fallback for version
+        version = pathParts[3] || 'latest';
+        
+        // ★★★ 在此环境下，链接必须包含项目名 ★★★
+        htmlDownloadUrl = `/_/downloads/${project}/${language}/${version}/htmlzip/`;
+
     }
-    // 2. 检查是否为子域名结构 (e.g., project.readthedocs.io)
+    // 2. 判断是否为“子域名托管”环境 (e.g., project.readthedocs.io)
     else if (hostname.includes('.readthedocs.io')) {
-        console.log("getInfoFromUrl: Detected 'Subdomain-based' (Read the Docs) structure.");
+        console.log("Detected: 'Subdomain-based' structure (Read the Docs).");
+        
         project = hostname.split('.')[0];
         language = pathParts[0] || 'en';
         version = pathParts[1] || 'latest';
+        
+        // ★★★ 在此环境下，链接不包含项目名 ★★★
+        htmlDownloadUrl = `/_/downloads/${language}/${version}/htmlzip/`;
+        
     }
-    // 3. 如果两种结构都不匹配，则发出警告
+    // 3. 最终备用逻辑
     else {
-        console.warn("getInfoFromUrl: Could not recognize URL structure. Using default fallback values.");
-        // 在这里，我们将使用上面定义的默认值
+        console.warn("Could not recognize URL structure. Download link may be incorrect.");
+        // 如果无法识别，可以默认使用包含项目名的格式，或保持'#'禁用状态
+        htmlDownloadUrl = `/_/downloads/${project}/${language}/${version}/htmlzip/`;
     }
     
-    const result = { project, language, version };
-    console.log("getInfoFromUrl: Parsed info ->", result);
-    return result;
+    const config = { project, language, version, htmlDownloadUrl };
+    console.log("Final Parsed Config:", config);
+    return config;
 }
 
 /**
- * The main function responsible for creating and appending the control buttons.
- * This function now solely relies on `getInfoFromUrl` for its data.
+ * 创建并添加控制按钮。
  */
 function createPageContent() {
     console.log("createPageContent: Function execution started.");
 
-    // --- 1. 获取所有必要信息 (唯一数据源: URL) ---
-    const { project, version, language } = getInfoFromUrl();
+    // --- 1. 一次性获取所有智能解析出的配置 ---
+    const config = getProjectConfigFromUrl();
+    const { project, version, language, htmlDownloadUrl } = config;
 
-    // Log the final data being used to build the controls.
-    console.log(`createPageContent: Data in use -> project='${project}', version='${version}', language='${language}'`);
+    console.log(`Using data: project='${project}', version='${version}', language='${language}'`);
+    console.log(`Using final download URL: ${htmlDownloadUrl}`);
 
-    // --- 2. Construct the Final Download URL ---
-    // The download URL structure for Read the Docs is consistent.
-    const htmlDownloadUrl = `/_/downloads/${project}/${language}/${version}/htmlzip/`;
-    console.log(`createPageContent: Constructed download URL -> ${htmlDownloadUrl}`);
-
-    // --- 3. Create and Configure DOM Elements ---
+    // --- 2. 创建并配置DOM元素 ---
 
     if (document.querySelector('.rtd-controls')) {
-        console.warn("createPageContent: Controls container '.rtd-controls' already exists. Halting to prevent duplicates.");
+        console.warn("Controls container already exists. Halting.");
         return;
     }
 
@@ -1257,11 +1264,11 @@ function createPageContent() {
         { href: "https://freenove.com/", target: "_blank", className: "website-btn", tooltip: "Freenove Official Website" },
         { href: "https://www.youtube.com/@Freenove", target: "_blank", className: "youtube", icon: "fab fa-youtube", tooltip: "YouTube" },
         {
-            href: htmlDownloadUrl,
+            href: htmlDownloadUrl, // ★★★ 直接使用已经智能生成好的链接 ★★★
             className: "download-btn",
             icon: "fas fa-download",
             tooltip: "Download HTML Docs",
-            download: `${project}-${version}.zip`
+            download: `${project}-${version}.zip` // 下载文件名依然使用 project，这是正确的
         }
     ];
 
@@ -1287,11 +1294,10 @@ function createPageContent() {
     });
 
     body.appendChild(rtdControls);
-    console.log("createPageContent: Controls were successfully created and added to the page.");
+    console.log("Controls were successfully created and added to the page.");
 }
 
 // --- SCRIPT EXECUTION ---
-// Wait for the basic document structure to be ready before running the script.
 document.addEventListener('DOMContentLoaded', () => {
     try {
         createPageContent();
