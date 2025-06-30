@@ -87,3 +87,13 @@ RTD有三种离线保存的格式，分别是epub（电子书格式），html（
 .. code-block:: bash
 
     https://docs.freenove.com/_/downloads/fnk0020/en/latest/htmlzip/
+
+此处仅讲解html格式打开方式：
+
+将下载的压缩包解压到任意目录，打开index.html即可在浏览器打开html格式
+
+.. image:: ../_static/imgs/function/function02.png
+    :align: center
+
+7.1.3 RTD新增功能-插件
+====================================
