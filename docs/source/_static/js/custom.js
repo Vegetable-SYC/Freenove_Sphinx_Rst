@@ -1211,7 +1211,7 @@ function createPageContent() {
     // "Cannot read property '...' of undefined".
     const project = rtdData.project || 'local-project';
     const version = rtdData.version || 'latest';
-    const language = 'en' || 'zh-cn'; // Default language set based on your original link structure.
+    const language = rtdData.language || 'zh-cn'; // Default language set based on your original link structure.
 
     // Log the final data being used to build the controls.
     console.log(`createPageContent: Data in use -> project='${project}', version='${version}', language='${language}'`);
