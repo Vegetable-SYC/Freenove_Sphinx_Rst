@@ -2,7 +2,7 @@
 1. 简介
 ##############################################################################
 
-:ref:`freenove_sphinx_rst/codes/tutorial/common_grammar:4. 常用语法`
+:ref:`freenove_sphinx_rst/codes/tutorial/tools:table formatter`
 
 :doc:`Deployment</Freenove_Sphinx_Rst/codes/tutorial/deployment>`
 
