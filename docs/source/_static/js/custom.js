@@ -1211,6 +1211,7 @@ function createPageContent() {
     // "Cannot read property '...' of undefined".
     const project = rtdData.project || 'local-project';
     const version = rtdData.version || 'latest';
+    const pathParts = window.location.pathname.split('/').filter(part => part);
     const language = pathParts[0]; // Default language set based on your original link structure.
 
     // Log the final data being used to build the controls.
