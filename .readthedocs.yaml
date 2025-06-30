@@ -15,7 +15,3 @@ python:
 
 sphinx:
   configuration: docs/source/conf.py
-
-addons:
-  enabled: true
-  link_previews: true
