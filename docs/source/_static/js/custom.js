@@ -1296,7 +1296,7 @@ function createPageContent() {
 // 2. 'try...catch': This is a safety net that catches any unexpected, fatal errors during the script's
 //    execution and logs them cleanly to the console, preventing a script error from crashing other
 //    JavaScript on the page.
-document.addEventListener('rtd:data:ready', () => {
+document.addEventListener('DOMContentLoaded', () => {
     try {
         createPageContent();
     } catch (error) {
