@@ -1181,24 +1181,44 @@ function addFontAwesome() {
  */
 
 function getInfoFromUrl() {
-    const pathParts = window.location.pathname.split('/').filter(part => part !== ''); // 分割并移除空字符串
+    // 原始路径: /projects/fnk0019/en/latest/
+    const pathParts = window.location.pathname.split('/').filter(part => part !== ''); 
+    // 分割后: ["projects", "fnk0019", "en", "latest"]
     
-    // 假设 URL 结构是 /<language>/<version>/...
-    // 对于 https://freenove-sphinx-rst.readthedocs.io/en/latest/
-    // pathParts 会是 ["en", "latest"]
-    
-    const lang = pathParts[0];       // 默认 'en'
-    const vers = pathParts[1];   // 默认 'latest'
+    // 初始化备用值
+    let proj = 'local-project';
+    let lang = 'en'; // 默认语言可以设为 'en'
+    let vers = 'latest';
 
-    // 对于 project 名称，它通常在主机名里。我们可以硬编码或者也从主机名解析。
-    // 在 Read the Docs 环境下，项目名是子域名。
-    const proj = window.location.hostname.split('.')[0];
+    // 检查路径结构是否符合预期
+    // 我们期望的结构是 /projects/<project-name>/<lang>/<version>
+    if (pathParts.length >= 4 && pathParts[0] === 'projects') {
+        proj = pathParts[1];
+        lang = pathParts[2];
+        vers = pathParts[3];
+        console.log("getInfoFromUrl: Successfully parsed new URL structure.");
+    } else {
+        // 如果结构不符，可以再尝试解析旧的 readthedocs.io 结构
+        // 这样代码就能同时兼容两种 URL
+        const host = window.location.hostname;
+        if (host.includes('readthedocs.io')) {
+            proj = host.split('.')[0];
+            lang = pathParts[0] || 'en';
+            vers = pathParts[1] || 'latest';
+            console.log("getInfoFromUrl: Parsed as readthedocs.io URL structure.");
+        } else {
+            console.warn("getInfoFromUrl: Could not determine URL structure. Using default values.");
+        }
+    }
     
-    return {
-        project: proj || 'local-project',
+    const result = {
+        project: proj,
         version: vers,
         language: lang
     };
+    
+    console.log("getInfoFromUrl: Parsed Info ->", result);
+    return result;
 }
 
 /**
