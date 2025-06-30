@@ -6,7 +6,7 @@
 
 .. :doc:`Deployment </Tools>`
 
-:guilabel:`Table Formatter`
+:doc:`./Tools`
 
 1.1 reStructuredText
 ****************************************************
