@@ -1180,95 +1180,69 @@ function addFontAwesome() {
  * - All styling is expected to be provided by an external CSS file.
  */
 
+/**
+ * 从当前页面的 URL 中解析出项目、版本和语言信息。
+ * 这个函数被设计为可以同时兼容两种主流的文档URL结构：
+ * 1. 子域名结构: https://<project>.readthedocs.io/<language>/<version>/
+ * 2. 路径结构:   https://docs.freenove.com/projects/<project>/<language>/<version>/
+ */
 function getInfoFromUrl() {
-    // 原始路径: /projects/fnk0019/en/latest/
-    const pathParts = window.location.pathname.split('/').filter(part => part !== ''); 
-    // 分割后: ["projects", "fnk0019", "en", "latest"]
-    
-    // 初始化备用值
-    let proj = 'local-project';
-    let lang = 'en'; // 默认语言可以设为 'en'
-    let vers = 'latest';
+    const hostname = window.location.hostname; // e.g., "freenove-sphinx-rst.readthedocs.io" or "docs.freenove.com"
+    const pathParts = window.location.pathname.split('/').filter(part => part !== ''); // e.g., ["en", "latest"] or ["projects", "fnk0019", "en", "latest"]
 
-    // 检查路径结构是否符合预期
-    // 我们期望的结构是 /projects/<project-name>/<lang>/<version>
-    if (pathParts.length >= 4 && pathParts[0] === 'projects') {
-        proj = pathParts[1];
-        lang = pathParts[2];
-        vers = pathParts[3];
-        console.log("getInfoFromUrl: Successfully parsed new URL structure.");
-    } else {
-        // 如果结构不符，可以再尝试解析旧的 readthedocs.io 结构
-        // 这样代码就能同时兼容两种 URL
-        const host = window.location.hostname;
-        if (host.includes('readthedocs.io')) {
-            proj = host.split('.')[0];
-            lang = pathParts[0] || 'en';
-            vers = pathParts[1] || 'latest';
-            console.log("getInfoFromUrl: Parsed as readthedocs.io URL structure.");
-        } else {
-            console.warn("getInfoFromUrl: Could not determine URL structure. Using default values.");
-        }
+    let project = 'unknown-project';
+    let language = 'en';
+    let version = 'latest';
+
+    console.log("getInfoFromUrl: Analyzing URL:", window.location.href);
+
+    // --- 逻辑判断开始 ---
+
+    // 1. 检查是否为路径结构 (e.g., docs.freenove.com/projects/...)
+    if (pathParts.length >= 3 && pathParts[0] === 'projects') {
+        console.log("getInfoFromUrl: Detected 'Path-based' structure.");
+        project = pathParts[1];
+        language = pathParts[2];
+        version = pathParts[3] || 'latest'; // Fallback for version
+    }
+    // 2. 检查是否为子域名结构 (e.g., project.readthedocs.io)
+    else if (hostname.includes('.readthedocs.io')) {
+        console.log("getInfoFromUrl: Detected 'Subdomain-based' (Read the Docs) structure.");
+        project = hostname.split('.')[0];
+        language = pathParts[0] || 'en';
+        version = pathParts[1] || 'latest';
+    }
+    // 3. 如果两种结构都不匹配，则发出警告
+    else {
+        console.warn("getInfoFromUrl: Could not recognize URL structure. Using default fallback values.");
+        // 在这里，我们将使用上面定义的默认值
     }
     
-    const result = {
-        project: proj,
-        version: vers,
-        language: lang
-    };
-    
-    console.log("getInfoFromUrl: Parsed Info ->", result);
+    const result = { project, language, version };
+    console.log("getInfoFromUrl: Parsed info ->", result);
     return result;
 }
 
 /**
  * The main function responsible for creating and appending the control buttons.
+ * This function now solely relies on `getInfoFromUrl` for its data.
  */
 function createPageContent() {
-    // Initial log to confirm that the function has been called.
     console.log("createPageContent: Function execution started.");
 
-    // --- 1. Diagnose Environment and Securely Get Data ---
-
-    // Check if the global READTHEDOCS_DATA object exists. This is the primary way
-    // to detect if the script is running in the live Read the Docs environment.
-    const hasRtdData = typeof window.READTHEDOCS_DATA !== 'undefined' && window.READTHEDOCS_DATA !== null;
-    console.log(`createPageContent: Is this a Read the Docs environment? -> ${hasRtdData}`);
-
-    // For debugging, log the entire raw RTD object if it exists.
-    // This is the most crucial piece of information for troubleshooting.
-    if (hasRtdData) {
-        console.log("createPageContent: Raw READTHEDOCS_DATA object content:", window.READTHEDOCS_DATA);
-    }
-
-    // Ensure `rtdData` is a valid object in any environment to prevent errors later.
-    // If `hasRtdData` is false, it becomes a safe, empty object `{}`.
-    const rtdData = hasRtdData ? window.READTHEDOCS_DATA : {};
-
-    // --- 2. Safely Extract Properties with Fallbacks ---
-
-    const infoFromUrl = getInfoFromUrl();
-
-    // By using the OR (||) operator, we provide a default value if a key is missing
-    // from `rtdData`. This is a defensive programming technique to prevent errors like
-    // "Cannot read property '...' of undefined".
-    const project = rtdData.project || infoFromUrl.project;
-    const version = rtdData.version || infoFromUrl.version;
-    const language = rtdData.language || infoFromUrl.language; // Default language set based on your original link structure.
+    // --- 1. 获取所有必要信息 (唯一数据源: URL) ---
+    const { project, version, language } = getInfoFromUrl();
 
     // Log the final data being used to build the controls.
     console.log(`createPageContent: Data in use -> project='${project}', version='${version}', language='${language}'`);
 
-    // --- 3. Construct the Final Download URL ---
-
-    // The download URL is built using the (now guaranteed safe) variables.
+    // --- 2. Construct the Final Download URL ---
+    // The download URL structure for Read the Docs is consistent.
     const htmlDownloadUrl = `/_/downloads/${project}/${language}/${version}/htmlzip/`;
     console.log(`createPageContent: Constructed download URL -> ${htmlDownloadUrl}`);
 
-    // --- 4. Create and Configure DOM Elements ---
+    // --- 3. Create and Configure DOM Elements ---
 
-    // Check if the controls container already exists to prevent duplicate creation
-    // if the script is accidentally included or executed more than once.
     if (document.querySelector('.rtd-controls')) {
         console.warn("createPageContent: Controls container '.rtd-controls' already exists. Halting to prevent duplicates.");
         return;
@@ -1278,8 +1252,6 @@ function createPageContent() {
     const rtdControls = document.createElement('div');
     rtdControls.className = 'rtd-controls';
 
-    // An array of objects to configure each button. This data-driven approach makes
-    // it easy to add, remove, or modify buttons in the future.
     const controlsData = [
         { href: "https://github.com/Freenove", target: "_blank", className: "github-btn", icon: "fab fa-github", tooltip: "GitHub" },
         { href: "https://freenove.com/", target: "_blank", className: "website-btn", tooltip: "Freenove Official Website" },
@@ -1289,11 +1261,10 @@ function createPageContent() {
             className: "download-btn",
             icon: "fas fa-download",
             tooltip: "Download HTML Docs",
-            download: `${project}-${version}.zip` // The 'download' attribute suggests a filename to the browser.
+            download: `${project}-${version}.zip`
         }
     ];
 
-    // Loop through the configuration data to build each button element.
     controlsData.forEach(data => {
         const link = document.createElement('a');
         link.href = data.href;
@@ -1301,44 +1272,26 @@ function createPageContent() {
         if (data.download) link.setAttribute('download', data.download);
         link.className = `control-btn ${data.className}`;
 
-        // If an icon is specified, create an `<i>` element for it.
         if (data.icon) {
             const icon = document.createElement('i');
             icon.className = data.icon;
             link.appendChild(icon);
         }
 
-        // Every button gets a tooltip for better user experience.
         const tooltip = document.createElement('span');
         tooltip.className = 'tooltip';
         tooltip.textContent = data.tooltip;
         link.appendChild(tooltip);
 
-        // Add the finished button to the main controls container.
         rtdControls.appendChild(link);
     });
 
-    // Append the container with all its buttons to the document body.
     body.appendChild(rtdControls);
-
-    // This section creates a main content container. You can comment this out
-    // if your page layout already provides one.
-    if (!document.querySelector('.container')) {
-        const container = document.createElement('div');
-        container.className = 'container';
-        body.appendChild(container);
-    }
-
     console.log("createPageContent: Controls were successfully created and added to the page.");
 }
 
 // --- SCRIPT EXECUTION ---
-// We wrap the entire process in a try...catch block inside a 'DOMContentLoaded' event listener.
-// 1. 'DOMContentLoaded': Ensures the script doesn't run until the basic HTML document is parsed and ready,
-//    which prevents errors from trying to access elements that don't exist yet (like `document.body`).
-// 2. 'try...catch': This is a safety net that catches any unexpected, fatal errors during the script's
-//    execution and logs them cleanly to the console, preventing a script error from crashing other
-//    JavaScript on the page.
+// Wait for the basic document structure to be ready before running the script.
 document.addEventListener('DOMContentLoaded', () => {
     try {
         createPageContent();
@@ -1346,4 +1299,3 @@ document.addEventListener('DOMContentLoaded', () => {
         console.error("A critical error occurred while executing createPageContent:", error);
     }
 });
-/* ---------------------------------------------------------------------------------------------- */
