@@ -2,6 +2,8 @@
 1. Introduction  
 ############################################################################## 
 
+:doc:`/Freenove_Sphinx_Rst/codes/tutorial/deployment`
+
 1.1 reStructuredText  
 ****************************************************  
 
@@ -46,7 +48,7 @@ Sphinx is a Python-based intelligent documentation generator designed for effici
 
 Python's official documentation, books, and open-source projects (e.g., NumPy) all use Sphinx. Its plugin ecosystem (e.g., autodoc, napoleon) and version control integration make it the preferred tool for managing complex documentation.  
 
-1.3 Read the Docs  
+1.3 Read the Docs
 *******************************  
 
 Read the Docs is an **open-source online documentation hosting platform** designed for developers. It supports automated builds, version control, and technical documentation hosting, seamlessly integrating with tools like GitHub/GitLab. By writing content in Markdown or reStructuredText, it automatically generates web-based documentation and provides features like multi-version management, full-text search, and multilingual support. It helps developers efficiently maintain clear, accessible project documentation, especially for open-source projects and technical collaboration scenarios.  
