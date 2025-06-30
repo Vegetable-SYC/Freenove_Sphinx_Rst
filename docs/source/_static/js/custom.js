@@ -1180,6 +1180,27 @@ function addFontAwesome() {
  * - All styling is expected to be provided by an external CSS file.
  */
 
+function getInfoFromUrl() {
+    const pathParts = window.location.pathname.split('/').filter(part => part !== ''); // 分割并移除空字符串
+    
+    // 假设 URL 结构是 /<language>/<version>/...
+    // 对于 https://freenove-sphinx-rst.readthedocs.io/en/latest/
+    // pathParts 会是 ["en", "latest"]
+    
+    const lang = pathParts[0];       // 默认 'en'
+    const vers = pathParts[1];   // 默认 'latest'
+
+    // 对于 project 名称，它通常在主机名里。我们可以硬编码或者也从主机名解析。
+    // 在 Read the Docs 环境下，项目名是子域名。
+    const proj = window.location.hostname.split('.')[0];
+    
+    return {
+        project: proj || 'local-project',
+        version: vers,
+        language: lang
+    };
+}
+
 /**
  * The main function responsible for creating and appending the control buttons.
  */
@@ -1206,12 +1227,14 @@ function createPageContent() {
 
     // --- 2. Safely Extract Properties with Fallbacks ---
 
+    const infoFromUrl = getInfoFromUrl();
+
     // By using the OR (||) operator, we provide a default value if a key is missing
     // from `rtdData`. This is a defensive programming technique to prevent errors like
     // "Cannot read property '...' of undefined".
-    const project = rtdData.project || 'local-project';
-    const version = rtdData.version || 'latest';
-    const language = rtdData.language || 'zh-cn'; // Default language set based on your original link structure.
+    const project = rtdData.project || infoFromUrl.project;
+    const version = rtdData.version || infoFromUrl.version;
+    const language = rtdData.language || infoFromUrl.language; // Default language set based on your original link structure.
 
     // Log the final data being used to build the controls.
     console.log(`createPageContent: Data in use -> project='${project}', version='${version}', language='${language}'`);
@@ -1296,10 +1319,8 @@ function createPageContent() {
 // 2. 'try...catch': This is a safety net that catches any unexpected, fatal errors during the script's
 //    execution and logs them cleanly to the console, preventing a script error from crashing other
 //    JavaScript on the page.
-window.addEventListener('load', () => {
-    console.log("Window 'load' event fired. Now attempting to run createPageContent.");
+document.addEventListener('DOMContentLoaded', () => {
     try {
-        // 在这里，READTHEDOCS_DATA 应该已经就位了
         createPageContent();
     } catch (error) {
         console.error("A critical error occurred while executing createPageContent:", error);
