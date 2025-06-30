@@ -1219,7 +1219,7 @@ function createPageContent() {
     // --- 3. Construct the Final Download URL ---
 
     // The download URL is built using the (now guaranteed safe) variables.
-    const htmlDownloadUrl = `/_/downloads/${project}/${language}/${version}/htmlzip/`;;
+    const htmlDownloadUrl = `/_/downloads/${project}/${language}/${version}/htmlzip/`;
     console.log(`createPageContent: Constructed download URL -> ${htmlDownloadUrl}`);
 
     // --- 4. Create and Configure DOM Elements ---
@@ -1296,7 +1296,7 @@ function createPageContent() {
 // 2. 'try...catch': This is a safety net that catches any unexpected, fatal errors during the script's
 //    execution and logs them cleanly to the console, preventing a script error from crashing other
 //    JavaScript on the page.
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('rtd:data:ready', () => {
     try {
         createPageContent();
     } catch (error) {

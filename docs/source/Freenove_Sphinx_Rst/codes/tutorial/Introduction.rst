@@ -1,11 +1,9 @@
-############################################################################## 
+##############################################################################
 1. Introduction  
-############################################################################## 
-
-:doc:`/Freenove_Sphinx_Rst/codes/tutorial/deployment`
+##############################################################################
 
 1.1 reStructuredText  
-****************************************************  
+****************************************************
 
 reStructuredText (reST) is a **lightweight** markup language specifically designed for technical documentation. Based on plain text, it can generate structured content (such as web pages, PDFs, etc.) through simple syntax. It is the core format of Python's documentation toolchain (e.g., Sphinx) and is **ideal for writing technical manuals, API documentation, and open-source project descriptions**.  
 
@@ -32,7 +30,7 @@ reStructuredText (reST) is a **lightweight** markup language specifically design
 - Complex content like technical books and academic papers.  
 
 1.2 Sphinx  
-******************************  
+******************************
 
 Sphinx is a Python-based intelligent documentation generator designed for efficiently creating clear, structured technical documentation. It is ideal for developers and technical writers to quickly build professional and maintainable documentation systems.  
 
@@ -49,7 +47,7 @@ Sphinx is a Python-based intelligent documentation generator designed for effici
 Python's official documentation, books, and open-source projects (e.g., NumPy) all use Sphinx. Its plugin ecosystem (e.g., autodoc, napoleon) and version control integration make it the preferred tool for managing complex documentation.  
 
 1.3 Read the Docs
-*******************************  
+*******************************
 
 Read the Docs is an **open-source online documentation hosting platform** designed for developers. It supports automated builds, version control, and technical documentation hosting, seamlessly integrating with tools like GitHub/GitLab. By writing content in Markdown or reStructuredText, it automatically generates web-based documentation and provides features like multi-version management, full-text search, and multilingual support. It helps developers efficiently maintain clear, accessible project documentation, especially for open-source projects and technical collaboration scenarios.  
 
