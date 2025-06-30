@@ -2,14 +2,12 @@
 1. 简介
 ##############################################################################
 
-:ref:`freenove_sphinx_rst/codes/tutorial/tools:table formatter`
-
-.. :doc:`Deployment </Tools>`
-
-:doc:`./Tools`
-
 1.1 reStructuredText
 ****************************************************
+
+:ref:`freenove_sphinx_rst/codes/tutorial/tools:table formatter`
+
+:doc:`Deployment</Freenove_Sphinx_Rst/codes/tutorial/Tools>`
 
 reStructuredText(reST) 是一种 **轻量级** 标记语言, 专为技术文档设计。它以纯文本为基础, 可通过简单语法生成结构化内容(如网页、PDF等), 是Python生态中文档工具链(如Sphinx)的核心格式, **适合编写技术手册、API文档和开源项目说明**。
 
