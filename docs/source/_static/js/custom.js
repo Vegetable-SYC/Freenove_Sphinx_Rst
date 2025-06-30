@@ -1159,99 +1159,101 @@ function addFontAwesome() {
 }
 
 /**
- * @file [Robust Version with Diagnostics]
- * This script creates a set of floating action buttons on the page.
+ * @fileoverview This script creates a set of floating control buttons (e.g., GitHub, Download)
+ * on a documentation page. It is intelligently designed to work across two different types
+ * of Read the Docs hosting environments:
  *
- * Key Features:
- * 1. Robustness: It is designed to work flawlessly in both local development
- *    and the live Read the Docs server environment. It gracefully handles the
- *    absence of server-specific data.
+ *  1. Subdomain-based: e.g., https://my-project.readthedocs.io/en/latest/
+ *  2. Path-based with Custom Domain: e.g., https://docs.my-site.com/projects/my-project/en/latest/
  *
- * 2. Diagnostics: It includes extensive console logging to provide a clear
- *    trace of its execution flow, data sources, and final outputs. This is
- *    invaluable for debugging.
- *
- * 3. Safety: It performs granular checks on the `READTHEDOCS_DATA` object
- *    and its properties, providing fallback values to prevent errors
- *    caused by `undefined` data.
- *
- * Dependencies:
- * - This script assumes Font Awesome is available for icons (e.g., 'fab fa-github').
- * - All styling is expected to be provided by an external CSS file.
+ * It correctly determines the environment from the URL and generates the appropriate
+ * download link for each case.
  */
 
 /**
- * 从URL智能解析信息并生成与环境匹配的下载链接。
- * 返回一个包含所有配置信息的对象。
+ * Intelligently parses the page's URL to determine the project's configuration.
+ * It identifies the hosting environment and generates the correct download URL format.
+ *
  * @returns {{project: string, language: string, version: string, htmlDownloadUrl: string}}
+ *          An object containing the parsed configuration and the environment-specific download URL.
  */
 function getProjectConfigFromUrl() {
     const hostname = window.location.hostname;
     const pathParts = window.location.pathname.split('/').filter(part => part !== '');
 
-    // 默认值
+    // --- Initialize with safe default values ---
+    // These will be used if the URL structure cannot be recognized.
     let project = 'unknown-project';
     let language = 'en';
     let version = 'latest';
-    let htmlDownloadUrl = '#'; // 默认一个安全的链接，以防万一
+    let htmlDownloadUrl = '#'; // A safe, non-functional link as a fallback.
 
     console.log("Analyzing URL:", window.location.href);
 
-    // --- 核心逻辑判断 ---
+    /*
+     * --- Core Logic: Differentiate between hosting environments ---
+     * This is the brain of the script. It checks for URL patterns to decide
+     * how to extract data and, critically, how to format the download URL.
+     */
 
-    // 1. 判断是否为“路径托管”环境 (e.g., docs.freenove.com/projects/...)
+    // Case 1: Check for a "Path-based" structure on a custom domain.
+    // e.g., https://docs.freenove.com/projects/fnk0019/en/latest/
     if (pathParts.length >= 3 && pathParts[0] === 'projects') {
         console.log("Detected: 'Path-based' structure (e.g., docs.freenove.com).");
         
         project = pathParts[1];
         language = pathParts[2];
-        version = pathParts[3] || 'latest';
+        version = pathParts[3] || 'latest'; // Fallback if version is missing.
         
-        // ★★★ 在此环境下，链接必须包含项目名 ★★★
+        // CRITICAL: In this environment, the download URL MUST include the project name.
         htmlDownloadUrl = `/_/downloads/${project}/${language}/${version}/htmlzip/`;
 
     }
-    // 2. 判断是否为“子域名托管”环境 (e.g., project.readthedocs.io)
+    // Case 2: Check for a "Subdomain-based" structure, typical of readthedocs.io.
+    // e.g., https://freenove-sphinx-rst.readthedocs.io/en/latest/
     else if (hostname.includes('.readthedocs.io')) {
-        console.log("Detected: 'Subdomain-based' structure (Read the Docs).");
+        console.log("Detected: 'Subdomain-based' structure (e.g., project.readthedocs.io).");
         
         project = hostname.split('.')[0];
         language = pathParts[0] || 'en';
         version = pathParts[1] || 'latest';
         
-        // ★★★ 在此环境下，链接不包含项目名 ★★★
+        // CRITICAL: In this environment, the download URL MUST NOT include the project name.
         htmlDownloadUrl = `/_/downloads/${language}/${version}/htmlzip/`;
         
     }
-    // 3. 最终备用逻辑
+    // Case 3: Fallback if the URL structure is unrecognized.
     else {
-        console.warn("Could not recognize URL structure. Download link may be incorrect.");
-        // 如果无法识别，可以默认使用包含项目名的格式，或保持'#'禁用状态
-        htmlDownloadUrl = `/_/downloads/${project}/${language}/${version}/htmlzip/`;
+        console.warn("Could not recognize URL structure. The download link might be incorrect.");
+        // We will stick with the safe '#' link, or you could construct a best-guess URL.
     }
     
+    // Package and return the final, calculated configuration.
     const config = { project, language, version, htmlDownloadUrl };
     console.log("Final Parsed Config:", config);
     return config;
 }
 
 /**
- * 创建并添加控制按钮。
+ * Creates the control buttons and appends them to the document body.
+ * It uses the configuration object provided by getProjectConfigFromUrl().
  */
 function createPageContent() {
     console.log("createPageContent: Function execution started.");
 
-    // --- 1. 一次性获取所有智能解析出的配置 ---
+    // --- 1. Get Smart Configuration ---
+    // This single call provides all the environment-specific data needed.
     const config = getProjectConfigFromUrl();
-    const { project, version, language, htmlDownloadUrl } = config;
+    const { project, version, htmlDownloadUrl } = config;
 
-    console.log(`Using data: project='${project}', version='${version}', language='${language}'`);
+    console.log(`Using data: project='${project}', version='${version}'`);
     console.log(`Using final download URL: ${htmlDownloadUrl}`);
 
-    // --- 2. 创建并配置DOM元素 ---
+    // --- 2. Create and Configure DOM Elements ---
 
+    // Guard clause: Prevent creating duplicate controls if the script is run more than once.
     if (document.querySelector('.rtd-controls')) {
-        console.warn("Controls container already exists. Halting.");
+        console.warn("Controls container already exists. Halting to prevent duplicates.");
         return;
     }
 
@@ -1259,49 +1261,68 @@ function createPageContent() {
     const rtdControls = document.createElement('div');
     rtdControls.className = 'rtd-controls';
 
+    // A data-driven approach to defining the buttons.
+    // This makes it easy to add, remove, or modify buttons in the future.
     const controlsData = [
         { href: "https://github.com/Freenove", target: "_blank", className: "github-btn", icon: "fab fa-github", tooltip: "GitHub" },
         { href: "https://freenove.com/", target: "_blank", className: "website-btn", tooltip: "Freenove Official Website" },
         { href: "https://www.youtube.com/@Freenove", target: "_blank", className: "youtube", icon: "fab fa-youtube", tooltip: "YouTube" },
         {
-            href: htmlDownloadUrl, // ★★★ 直接使用已经智能生成好的链接 ★★★
+            href: htmlDownloadUrl, // Use the intelligently generated download URL.
             className: "download-btn",
             icon: "fas fa-download",
             tooltip: "Download HTML Docs",
-            download: `${project}-${version}.zip` // 下载文件名依然使用 project，这是正确的
+            download: `${project}-${version}.zip` // The 'download' attribute suggests a filename to the browser.
         }
     ];
 
+    // Loop through the configuration data to build each button element.
     controlsData.forEach(data => {
         const link = document.createElement('a');
         link.href = data.href;
+        
+        // Set optional attributes only if they exist in the data.
         if (data.target) link.target = data.target;
         if (data.download) link.setAttribute('download', data.download);
+        
         link.className = `control-btn ${data.className}`;
 
+        // If an icon class is provided, create the <i> element for it.
         if (data.icon) {
             const icon = document.createElement('i');
             icon.className = data.icon;
             link.appendChild(icon);
         }
 
+        // Every button gets a tooltip for a better user experience.
         const tooltip = document.createElement('span');
         tooltip.className = 'tooltip';
         tooltip.textContent = data.tooltip;
         link.appendChild(tooltip);
 
+        // Add the finished button to the main controls container.
         rtdControls.appendChild(link);
     });
 
+    // Finally, attach the container with all its buttons to the document body.
     body.appendChild(rtdControls);
+    
     console.log("Controls were successfully created and added to the page.");
 }
 
-// --- SCRIPT EXECUTION ---
+
+/* --- SCRIPT EXECUTION ENTRY POINT --- */
+
+// We wrap the entire process in a 'DOMContentLoaded' event listener.
+// This ensures the script doesn't run until the basic HTML document is parsed and ready,
+// which prevents errors from trying to access elements that don't exist yet (like `document.body`).
 document.addEventListener('DOMContentLoaded', () => {
+    // A try...catch block is a safety net that catches any unexpected, fatal errors
+    // during the script's execution, preventing them from crashing other JavaScript on the page.
     try {
         createPageContent();
     } catch (error) {
         console.error("A critical error occurred while executing createPageContent:", error);
     }
 });
+/* ---------------------------------------------------------------------------------------------- */
