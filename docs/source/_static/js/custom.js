@@ -1296,11 +1296,40 @@ function createPageContent() {
 // 2. 'try...catch': This is a safety net that catches any unexpected, fatal errors during the script's
 //    execution and logs them cleanly to the console, preventing a script error from crashing other
 //    JavaScript on the page.
-document.addEventListener('DOMContentLoaded', () => {
-    try {
-        createPageContent();
-    } catch (error) {
-        console.error("A critical error occurred while executing createPageContent:", error);
+function initializeWhenReady(maxRetries = 10) {
+    let attempt = 0;
+
+    function checkAndRun() {
+        console.log(`Initialization attempt #${attempt + 1}...`);
+
+        // 检查 READTHEDOCS_DATA 对象是否存在且包含关键信息
+        if (typeof window.READTHEDOCS_DATA !== 'undefined' && window.READTHEDOCS_DATA.project) {
+            console.log("READTHEDOCS_DATA is ready! Running createPageContent...");
+            try {
+                createPageContent();
+            } catch (error) {
+                console.error("A critical error occurred while executing createPageContent:", error);
+            }
+        } else if (attempt < maxRetries) {
+            // 如果对象还不存在，并且我们还有剩余次数，100毫秒后重试
+            attempt++;
+            setTimeout(checkAndRun, 100); // Wait 100ms and try again
+        } else {
+            // 达到最大次数后仍然找不到，记录错误并使用备用逻辑
+            console.warn("Could not find READTHEDOCS_DATA after several attempts. Running createPageContent with fallback data.");
+            try {
+                // 此时 createPageContent 依然会运行，但会使用你设定的默认值
+                createPageContent();
+            } catch (error) {
+                console.error("A critical error occurred during fallback execution:", error);
+            }
+        }
     }
-});
+
+    checkAndRun();
+}
+
+// 不再使用 DOMContentLoaded，而是直接开始轮询
+// 页面加载逻辑会确保在脚本可执行时，这个函数就会被调用
+initializeWhenReady();
 /* ---------------------------------------------------------------------------------------------- */
