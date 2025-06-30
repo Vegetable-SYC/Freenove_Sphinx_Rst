@@ -4,7 +4,9 @@
 
 :ref:`freenove_sphinx_rst/codes/tutorial/tools:table formatter`
 
-:doc:`Deployment</Freenove_Sphinx_Rst/codes/tutorial/deployment>`
+.. :doc:`Deployment </Tools>`
+
+:guilabel:`Table Formatter`
 
 1.1 reStructuredText
 ****************************************************
