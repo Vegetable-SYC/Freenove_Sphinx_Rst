@@ -4,6 +4,8 @@
 
 :ref:`freenove_sphinx_rst/codes/tutorial/common_grammar:4. 常用语法`
 
+:doc:`Deployment</Freenove_Sphinx_Rst/codes/tutorial/deployment>`
+
 1.1 reStructuredText
 ****************************************************
 
