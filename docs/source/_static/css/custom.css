@@ -905,7 +905,7 @@ dl.c.function dt.sig.sig-object.c {
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08); /* A soft shadow to make the panel "float". */
     
     /* Stacking: Ensures the panel appears on top of other page content. */
-    z-index: 1000;
+    z-index: 500;
     
     /* Typography: Sets the base text style for readability. */
     font-size: 14px;

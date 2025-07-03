@@ -1183,13 +1183,10 @@ function getProjectConfigFromUrl() {
     let htmlDownloadUrl = '#'; // Fallback to a non-functional link
     let epubDownloadUrl = '#'; // Fallback for the EPUB link
 
-    console.log("Analyzing URL:", window.location.href);
-
     // --- Logic to differentiate between hosting environments and build URLs ---
 
     // Case 1: "Path-based" structure (e.g., https://docs.freenove.com/projects/fnk0019/en/latest/)
     if (pathParts.length >= 3 && pathParts[0] === 'projects') {
-        console.log("Detected: 'Path-based' structure (e.g., docs.freenove.com).");
         
         project = pathParts[1];
         language = pathParts[2];
@@ -1202,7 +1199,6 @@ function getProjectConfigFromUrl() {
     }
     // Case 2: "Subdomain-based" structure (e.g., https://freenove-sphinx-rst.readthedocs.io/en/latest/)
     else if (hostname.includes('.readthedocs.io')) {
-        console.log("Detected: 'Subdomain-based' structure (e.g., project.readthedocs.io).");
         
         project = hostname.split('.')[0];
         language = pathParts[0] || 'en';
@@ -1220,7 +1216,6 @@ function getProjectConfigFromUrl() {
     
     // Package and return the final configuration.
     const config = { project, language, version, htmlDownloadUrl, epubDownloadUrl };
-    console.log("Final Parsed Config:", config);
     return config;
 }
 
@@ -1229,15 +1224,10 @@ function getProjectConfigFromUrl() {
  * It also sets up all necessary event listeners for interactivity.
  */
 function createPageContent() {
-    console.log("createPageContent: Function execution started.");
 
     // --- 1. Get Environment-Specific Configuration ---
     const config = getProjectConfigFromUrl();
     const { project, version, htmlDownloadUrl, epubDownloadUrl } = config;
-
-    console.log(`Using data: project='${project}', version='${version}'`);
-    console.log(`Using HTML URL: ${htmlDownloadUrl}`);
-    console.log(`Using EPUB URL: ${epubDownloadUrl}`);
 
     // --- 2. Create the Floating Action Buttons ---
 
@@ -1290,7 +1280,6 @@ function createPageContent() {
     });
 
     body.appendChild(rtdControls);
-    console.log("Controls were successfully created and added to the page.");
 
     // --- 3. Create the Download Modal (Initially Hidden) ---
     const modal = document.createElement('div');
@@ -1308,7 +1297,6 @@ function createPageContent() {
         </div>
     `;
     body.appendChild(modal);
-    console.log("Download modal created and added to the page.");
 
     // --- 4. Set Up Event Listeners for the Modal ---
     const downloadTriggerBtn = document.getElementById('download-trigger-btn');
@@ -1319,20 +1307,17 @@ function createPageContent() {
     downloadTriggerBtn.addEventListener('click', (event) => {
         event.preventDefault(); // Extra precaution to stop any link behavior.
         downloadModal.style.display = 'flex'; // Use 'flex' to activate the flexbox centering.
-        console.log("Download modal opened.");
     });
 
     // Event: Click the 'x' to close the modal.
     closeModalBtn.addEventListener('click', () => {
         downloadModal.style.display = 'none';
-        console.log("Download modal closed by 'X' button.");
     });
 
     // Event: Click the dark overlay (outside the modal content) to close it.
     window.addEventListener('click', (event) => {
         if (event.target === downloadModal) {
             downloadModal.style.display = 'none';
-            console.log("Download modal closed by clicking the overlay.");
         }
     });
 }
@@ -1365,7 +1350,6 @@ document.addEventListener('DOMContentLoaded', function() {
     // 如果值为 'true'，说明用户在本会话中已经关闭过公告框。
     if (sessionStorage.getItem(announcementClosedKey) === 'true') {
         // 如果已经关闭过，则直接退出函数，不执行后面的创建和显示逻辑。
-        console.log('公告框已被用户关闭，本次会话不再显示。');
         return; 
     }
 
@@ -1420,8 +1404,6 @@ document.addEventListener('DOMContentLoaded', function() {
             // 第二步（核心优化）：将关闭状态记录到 sessionStorage 中。
             // 这样，在当前浏览器会话中，即使用户跳转到其他页面，这个记录也会保留下来。
             sessionStorage.setItem(announcementClosedKey, 'true');
-
-            console.log('公告框已关闭，并将状态保存到 sessionStorage。');
         });
     } else {
         // 如果找不到元素，在控制台打印警告，方便调试。
