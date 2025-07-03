@@ -197,6 +197,22 @@ document.addEventListener('DOMContentLoaded', function() {
 
 
 /* ---------------------------------------------------------------------------------------------- */
+/* description: About the four circular controls
+
+ * author: vegetable-syc
+ */
+
+/**
+ * Adds Font Awesome CSS library to the document head
+ * Uses CDN for fast loading
+ */
+function addFontAwesome() {
+    const link = document.createElement('link');
+    link.rel = 'stylesheet';
+    link.href = 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css';
+    document.head.appendChild(link);
+}
+
 /* description: About Online Document Navigation
 
  * author: vegetable-syc
@@ -1140,24 +1156,6 @@ document.head.appendChild(style);
 
 
 /* ---------------------------------------------------------------------------------------------- */
-/* description: About the four circular controls
-
- * author: vegetable-syc
-
- * date: 2025/06/06
- */
-
-/**
- * Adds Font Awesome CSS library to the document head
- * Uses CDN for fast loading
- */
-function addFontAwesome() {
-    const link = document.createElement('link');
-    link.rel = 'stylesheet';
-    link.href = 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css';
-    document.head.appendChild(link);
-}
-
 /**
  * @fileoverview This script creates a set of floating control buttons (e.g., GitHub, Download)
  * on a documentation page. It is intelligently designed to work across two different types
@@ -1177,40 +1175,36 @@ function addFontAwesome() {
  * @returns {{project: string, language: string, version: string, htmlDownloadUrl: string}}
  *          An object containing the parsed configuration and the environment-specific download URL.
  */
+/**
+ * 从 URL 中解析项目配置信息。
+ * 这个函数现在会同时生成 EPUB 和 HTML 的下载链接。
+ */
 function getProjectConfigFromUrl() {
     const hostname = window.location.hostname;
     const pathParts = window.location.pathname.split('/').filter(part => part !== '');
 
-    // --- Initialize with safe default values ---
-    // These will be used if the URL structure cannot be recognized.
     let project = 'unknown-project';
     let language = 'en';
     let version = 'latest';
-    let htmlDownloadUrl = '#'; // A safe, non-functional link as a fallback.
+    let htmlDownloadUrl = '#'; 
+    let epubDownloadUrl = '#'; // 新增：EPUB 下载链接的默认值
 
     console.log("Analyzing URL:", window.location.href);
 
-    /*
-     * --- Core Logic: Differentiate between hosting environments ---
-     * This is the brain of the script. It checks for URL patterns to decide
-     * how to extract data and, critically, how to format the download URL.
-     */
-
-    // Case 1: Check for a "Path-based" structure on a custom domain.
-    // e.g., https://docs.freenove.com/projects/fnk0019/en/latest/
+    // Case 1: 基于路径的结构 (e.g., docs.freenove.com)
     if (pathParts.length >= 3 && pathParts[0] === 'projects') {
         console.log("Detected: 'Path-based' structure (e.g., docs.freenove.com).");
         
         project = pathParts[1];
         language = pathParts[2];
-        version = pathParts[3] || 'latest'; // Fallback if version is missing.
+        version = pathParts[3] || 'latest';
         
-        // CRITICAL: In this environment, the download URL MUST include the project name.
+        // 生成两种格式的下载链接
         htmlDownloadUrl = `/_/downloads/${project}/${language}/${version}/htmlzip/`;
+        epubDownloadUrl = `/_/downloads/${project}/${language}/${version}/epub/`; // 新增
 
     }
-    // Case 2: Check for a "Subdomain-based" structure, typical of readthedocs.io.
-    // e.g., https://freenove-sphinx-rst.readthedocs.io/en/latest/
+    // Case 2: 基于子域名的结构 (e.g., project.readthedocs.io)
     else if (hostname.includes('.readthedocs.io')) {
         console.log("Detected: 'Subdomain-based' structure (e.g., project.readthedocs.io).");
         
@@ -1218,40 +1212,37 @@ function getProjectConfigFromUrl() {
         language = pathParts[0] || 'en';
         version = pathParts[1] || 'latest';
         
-        // CRITICAL: In this environment, the download URL MUST NOT include the project name.
+        // 生成两种格式的下载链接
         htmlDownloadUrl = `/_/downloads/${language}/${version}/htmlzip/`;
+        epubDownloadUrl = `/_/downloads/${language}/${version}/epub/`; // 新增
         
     }
-    // Case 3: Fallback if the URL structure is unrecognized.
+    // Case 3: 无法识别的结构
     else {
-        console.warn("Could not recognize URL structure. The download link might be incorrect.");
-        // We will stick with the safe '#' link, or you could construct a best-guess URL.
+        console.warn("Could not recognize URL structure. Download links might be incorrect.");
     }
     
-    // Package and return the final, calculated configuration.
-    const config = { project, language, version, htmlDownloadUrl };
+    // 返回包含所有必要信息的新配置对象
+    const config = { project, language, version, htmlDownloadUrl, epubDownloadUrl };
     console.log("Final Parsed Config:", config);
     return config;
 }
 
 /**
- * Creates the control buttons and appends them to the document body.
- * It uses the configuration object provided by getProjectConfigFromUrl().
+ * 创建页面上的控制按钮和下载弹出框。
  */
 function createPageContent() {
     console.log("createPageContent: Function execution started.");
 
-    // --- 1. Get Smart Configuration ---
-    // This single call provides all the environment-specific data needed.
+    // --- 1. 获取包含 EPUB 和 HTML 链接的智能配置 ---
     const config = getProjectConfigFromUrl();
-    const { project, version, htmlDownloadUrl } = config;
+    const { project, version, htmlDownloadUrl, epubDownloadUrl } = config;
 
     console.log(`Using data: project='${project}', version='${version}'`);
-    console.log(`Using final download URL: ${htmlDownloadUrl}`);
+    console.log(`Using final HTML URL: ${htmlDownloadUrl}`);
+    console.log(`Using final EPUB URL: ${epubDownloadUrl}`);
 
-    // --- 2. Create and Configure DOM Elements ---
-
-    // Guard clause: Prevent creating duplicate controls if the script is run more than once.
+    // --- 2. 创建和配置 DOM 元素 ---
     if (document.querySelector('.rtd-controls')) {
         console.warn("Controls container already exists. Halting to prevent duplicates.");
         return;
@@ -1261,68 +1252,160 @@ function createPageContent() {
     const rtdControls = document.createElement('div');
     rtdControls.className = 'rtd-controls';
 
-    // A data-driven approach to defining the buttons.
-    // This makes it easy to add, remove, or modify buttons in the future.
     const controlsData = [
         { href: "https://github.com/Freenove", target: "_blank", className: "github-btn", icon: "fab fa-github", tooltip: "GitHub" },
         { href: "https://freenove.com/", target: "_blank", className: "website-btn", tooltip: "Freenove Official Website" },
         { href: "https://www.youtube.com/@Freenove", target: "_blank", className: "youtube", icon: "fab fa-youtube", tooltip: "YouTube" },
         {
-            href: htmlDownloadUrl, // Use the intelligently generated download URL.
+            // 重要改动：href 设置为 javascript:void(0) 以阻止默认跳转。
+            // id 用于后续添加点击事件监听器。
+            href: "javascript:void(0);", 
+            id: "download-trigger-btn", // 新增ID
             className: "download-btn",
             icon: "fas fa-download",
-            tooltip: "Download HTML Docs",
-            download: `${project}-${version}.zip` // The 'download' attribute suggests a filename to the browser.
+            tooltip: "Download Docs" // 更新提示文字
         }
     ];
 
-    // Loop through the configuration data to build each button element.
     controlsData.forEach(data => {
         const link = document.createElement('a');
         link.href = data.href;
         
-        // Set optional attributes only if they exist in the data.
         if (data.target) link.target = data.target;
-        if (data.download) link.setAttribute('download', data.download);
+        if (data.id) link.id = data.id; // 设置ID
         
         link.className = `control-btn ${data.className}`;
 
-        // If an icon class is provided, create the <i> element for it.
         if (data.icon) {
             const icon = document.createElement('i');
             icon.className = data.icon;
             link.appendChild(icon);
         }
 
-        // Every button gets a tooltip for a better user experience.
         const tooltip = document.createElement('span');
         tooltip.className = 'tooltip';
         tooltip.textContent = data.tooltip;
         link.appendChild(tooltip);
-
-        // Add the finished button to the main controls container.
+        
         rtdControls.appendChild(link);
     });
-
-    // Finally, attach the container with all its buttons to the document body.
-    body.appendChild(rtdControls);
     
+    body.appendChild(rtdControls);
     console.log("Controls were successfully created and added to the page.");
+
+    // --- 3. 新增：创建下载模态对话框（默认隐藏） ---
+    const modal = document.createElement('div');
+    modal.className = 'download-modal';
+    modal.id = 'downloadModal';
+    modal.innerHTML = `
+        <div class="modal-content">
+            <span class="modal-close" title="Close">×</span>
+            <h3>选择下载格式</h3>
+            <div class="modal-links">
+                <a href="${epubDownloadUrl}" download="${project}-${version}.epub">下载 EPUB</a>
+                <a href="${htmlDownloadUrl}" download="${project}-${version}.zip">下载 HTML (.zip)</a>
+            </div>
+        </div>
+    `;
+    body.appendChild(modal);
+    console.log("Download modal created and added to the page.");
+
+    // --- 4. 新增：为新元素添加事件监听器 ---
+    const downloadTriggerBtn = document.getElementById('download-trigger-btn');
+    const downloadModal = document.getElementById('downloadModal');
+    const closeModalBtn = downloadModal.querySelector('.modal-close');
+
+    // 点击下载按钮，显示模态框
+    downloadTriggerBtn.addEventListener('click', (event) => {
+        event.preventDefault(); // 阻止 <a> 标签的默认行为
+        downloadModal.style.display = 'flex'; // 使用 flex 来居中
+        console.log("Download modal opened.");
+    });
+
+    // 点击关闭按钮 (X)，隐藏模态框
+    closeModalBtn.addEventListener('click', () => {
+        downloadModal.style.display = 'none';
+        console.log("Download modal closed by 'X' button.");
+    });
+
+    // 点击模态框的背景（灰色区域），也隐藏模态框
+    window.addEventListener('click', (event) => {
+        if (event.target === downloadModal) {
+            downloadModal.style.display = 'none';
+            console.log("Download modal closed by clicking the overlay.");
+        }
+    });
 }
 
-
-/* --- SCRIPT EXECUTION ENTRY POINT --- */
-
-// We wrap the entire process in a 'DOMContentLoaded' event listener.
-// This ensures the script doesn't run until the basic HTML document is parsed and ready,
-// which prevents errors from trying to access elements that don't exist yet (like `document.body`).
+/* --- 脚本执行入口 --- */
 document.addEventListener('DOMContentLoaded', () => {
-    // A try...catch block is a safety net that catches any unexpected, fatal errors
-    // during the script's execution, preventing them from crashing other JavaScript on the page.
     try {
         createPageContent();
     } catch (error) {
         console.error("A critical error occurred while executing createPageContent:", error);
     }
 });
+
 /* ---------------------------------------------------------------------------------------------- */
+
+// 当文档加载完成后执行
+document.addEventListener('DOMContentLoaded', function() {
+
+    // 1. 定义包含 HTML 结构的多行字符串
+    // 使用模板字符串 (``) 可以方便地编写多行 HTML
+    const announcementHTML = `
+        <div id="custom-announcement" class="rtd-announcement-panel">
+            <!-- 关闭按钮 -->
+            <span id="close-announcement" class="announcement-close" title="关闭">×</span>
+
+            <!-- 公告标题 -->
+            <div class="announcement-title">
+                <span class="announcement-icon">📃</span>
+                <span>重要公告</span>
+            </div>
+
+            <!-- 公告主要内容 -->
+            <div class="announcement-content">
+                <p>
+                    当前线上文档正处于 <strong>测试阶段</strong>，部分内容可能仍在完善中。
+                </p>
+                <p style="margin-top: 10px;">
+                    请<strong>以最新的 <a href="#">PDF 教程</a> 为最终标准</strong>。感谢您的理解与支持！
+                </p>
+            </div>
+            <hr></hr>
+            <!-- 分割线 -->
+            <!-- 公告标题 -->
+            <div class="announcement-title">
+                <span class="announcement-icon">📖</span>
+                <span>功能说明</span>
+            </div>
+
+            <!-- 公告主要内容 -->
+            <div class="announcement-content">
+                <p>
+                    1、网页右侧🔍为全局搜索，点开后在输入框中输入fnk序号可以跳转到对应的教程中（例如fnk0019）
+                </p>
+
+                <p>
+                    2、如果需要下载该教程的离线HTML版本，可以点击教程右侧的下载图标，如需下载epub格式，请点击
+                </p>
+            </div>
+        </div>
+    `;
+
+    // 2. 将 HTML 字符串注入到 body 元素的末尾
+    document.body.insertAdjacentHTML('beforeend', announcementHTML);
+
+    // 3. 为关闭按钮添加点击事件
+    const closeButton = document.getElementById('close-announcement');
+    const announcementPanel = document.getElementById('custom-announcement');
+
+    if (closeButton && announcementPanel) {
+        closeButton.addEventListener('click', function() {
+            // 点击后隐藏面板
+            announcementPanel.style.display = 'none';
+        });
+    }
+
+});

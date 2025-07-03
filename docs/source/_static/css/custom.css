@@ -782,4 +782,199 @@ dl.c.function dt.sig.sig-object.c {
         border-color: rgba(0, 0, 0, 0.8) transparent transparent transparent;
     }
 }
+
+/* 
+ * --- 新增：下载模态对话框样式 --- 
+ */
+.download-modal {
+    /* 默认隐藏 */
+    display: none; 
+    position: fixed; /* 固定定位，覆盖整个屏幕 */
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0,0,0,0.5); /* 半透明黑色背景 */
+    
+    /* 使用Flexbox让内容垂直和水平居中 */
+    justify-content: center;
+    align-items: center;
+}
+
+.modal-content {
+    background-color: #fefefe;
+    padding: 25px 35px;
+    border: 1px solid #888;
+    width: 80%;
+    max-width: 400px; /* 最大宽度 */
+    border-radius: 8px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+    position: relative;
+    text-align: center;
+    animation: fadeIn 0.3s;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: scale(0.9); }
+    to { opacity: 1; transform: scale(1); }
+}
+
+.modal-close {
+    color: #aaa;
+    position: absolute;
+    top: 10px;
+    right: 20px;
+    font-size: 28px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.modal-close:hover,
+.modal-close:focus {
+    color: black;
+    text-decoration: none;
+}
+
+.modal-content h3 {
+    margin-top: 0;
+    color: #333;
+    font-size: 22px;
+}
+
+.modal-links {
+    display: flex;
+    justify-content: space-around;
+    margin-top: 20px;
+    gap: 15px; /* 两个下载按钮之间的间距 */
+}
+
+.modal-links a {
+    flex-grow: 1; /* 让两个按钮平分空间 */
+    padding: 12px 20px;
+    background-color: #007bff;
+    color: white;
+    text-decoration: none;
+    border-radius: 5px;
+    font-size: 16px;
+    transition: background-color 0.2s ease;
+}
+
+.modal-links a:hover {
+    background-color: #0056b3;
+}
+
 /* ---------------------------------------------------------------------------------------------- */
+
+/*
+ * Read the Docs 自定义公告面板样式
+ */
+
+/* 公告面板容器 */
+.rtd-announcement-panel {
+    position: fixed; /* 固定在视窗中 */
+    top: 100px; /* 距离顶部 100px */
+    right: 120px; /* 距离右侧 20px */
+    width: 800px; /* 面板宽度 */
+    padding: 30px;
+    background-color: #f8f9fa; /* 轻微的灰色背景 */
+    border: 1px solid #e9ecef; /* 柔和的边框 */
+    border-radius: 10px; /* 圆角 */
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08); /* 精致的阴影 */
+    z-index: 1000; /* 确保在顶层 */
+    font-size: 14px;
+    line-height: 1.6;
+    transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+/* 面板标题部分 */
+.announcement-title {
+    display: flex;
+    align-items: center;
+    font-size: 18px;
+    font-weight: 600; /* 字体加粗 */
+    color: #212529; /* 深色标题 */
+    margin-bottom: 15px;
+}
+
+/* 标题图标 */
+.announcement-icon {
+    font-size: 24px;
+    margin-right: 10px;
+    color: #007bff; /* 品牌蓝色 */
+}
+
+/* 公告主要内容 */
+.announcement-content p {
+    margin: 0;
+    color: #495057; /* 正文颜色 */
+}
+
+/* 强调文本 */
+.announcement-content strong {
+    color: #d9534f; /* 红色，用于强调“测试阶段” */
+}
+
+/* 分割线 */
+.announcement-divider {
+    border: 0;
+    border-top: 1px solid #dee2e6;
+    margin: 20px 0; /* 上下留出间距 */
+}
+
+/* 功能亮点区域 */
+.feature-highlight h4 {
+    font-size: 16px;
+    font-weight: 600;
+    color: #343a40;
+    margin-top: 0;
+    margin-bottom: 10px;
+}
+
+.feature-highlight ul {
+    list-style-type: none; /* 去掉默认的项目符号 */
+    padding-left: 0;
+    margin-bottom: 0;
+}
+
+.feature-highlight li {
+    padding-left: 22px;
+    position: relative;
+    margin-bottom: 8px;
+}
+
+/* 自定义列表项目符号 */
+.feature-highlight li::before {
+    content: '✓'; /* 使用对勾作为符号 */
+    position: absolute;
+    left: 0;
+    top: 1px;
+    color: #28a745; /* 绿色 */
+    font-weight: bold;
+}
+
+
+/* 关闭按钮 */
+.announcement-close {
+    position: absolute;
+    top: 10px;
+    right: 15px;
+    font-size: 24px;
+    font-weight: bold;
+    color: #adb5bd;
+    cursor: pointer;
+    line-height: 1;
+    transition: color 0.2s ease;
+}
+
+.announcement-close:hover {
+    color: #495057;
+}
+
+/* 响应式设计：当屏幕宽度小于 1200px 时隐藏公告 */
+@media (max-width: 1200px) {
+    .rtd-announcement-panel {
+        display: none;
+    }
+}
