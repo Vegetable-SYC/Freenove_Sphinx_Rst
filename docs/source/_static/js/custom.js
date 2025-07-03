@@ -1352,97 +1352,80 @@ document.addEventListener('DOMContentLoaded', () => {
 
 /* ---------------------------------------------------------------------------------------------- */
 
-/**
- * @fileoverview This script injects and manages a custom announcement panel on the page.
- * It waits for the document to be fully loaded, then dynamically adds the panel's
- * HTML and attaches an event listener to its close button for user interaction.
- */
+// 监听 DOMContentLoaded 事件，确保在整个 HTML 文档加载并解析完毕后才执行脚本。
+// 这样可以避免因元素不存在而导致的脚本错误。
+document.addEventListener('DOMContentLoaded', function() {
 
-// Execute the main function only after the entire HTML document has been completely
-// loaded and parsed. This prevents errors from trying to manipulate DOM elements
-// that do not yet exist.
-// document.addEventListener('DOMContentLoaded', function() {
+    // --- 1. 定义一个用于 sessionStorage 的键名 ---
+    // 这个键名是唯一的，用于在 sessionStorage 中存储和读取公告框的状态。
+    const announcementClosedKey = 'isAnnouncementClosed';
 
-//     // --- 1. Define the HTML Structure for the Announcement Panel ---
+    // --- 2. 检查用户是否已经关闭过公告框 ---
+    // 从 sessionStorage 中读取键名为 announcementClosedKey 的值。
+    // 如果值为 'true'，说明用户在本会话中已经关闭过公告框。
+    if (sessionStorage.getItem(announcementClosedKey) === 'true') {
+        // 如果已经关闭过，则直接退出函数，不执行后面的创建和显示逻辑。
+        console.log('公告框已被用户关闭，本次会话不再显示。');
+        return; 
+    }
 
-//     // A template literal (using backticks ``) is used to define the multi-line HTML string.
-//     // This approach is cleaner and more readable than using string concatenation ('...' + '...').
-//     const announcementHTML = `
-//         <div id="custom-announcement" class="rtd-announcement-panel">
-            
-//             <!-- Close Button: An 'x' that allows users to dismiss the panel. -->
-//             <span id="close-announcement" class="announcement-close" title="Close">×</span>
+    // --- 3. 定义公告框的 HTML 结构 ---
+    // 只有在用户没有关闭过公告框的情况下，才会执行到这里。
+    const announcementHTML = `
+        <div id="custom-announcement" class="rtd-announcement-panel">
+            <span id="close-announcement" class="announcement-close" title="关闭">×</span>
+            <div class="announcement-title">
+                <span class="announcement-icon">📃</span>
+                <span>重要公告</span>
+            </div>
+            <div class="announcement-content">
+                <p>
+                    当前线上文档正处于 <strong>测试阶段</strong>，部分内容可能仍在完善中。
+                </p>
+                <p style="margin-top: 10px;">
+                    请<strong>以最新的 <a href="#">PDF 教程</a> 为最终标准</strong>。感谢您的理解与支持！
+                </p>
+            </div>
+            <hr>
+            <div class="announcement-title">
+                <span class="announcement-icon">📖</span>
+                <span>功能说明</span>
+            </div>
+            <div class="announcement-content">
+                <p>
+                    1、网页右侧🔍为全局搜索，点开后在输入框中输入fnk序号可以跳转到对应的教程中（例如fnk0019）。
+                </p>
+                <p>
+                    2、如果需要下载该教程的离线HTML版本或EPUB格式，可以点击教程右侧的下载图标。
+                </p>
+            </div>
+        </div>
+    `;
 
-//             <!-- First Section: Main Announcement -->
-//             <div class="announcement-title">
-//                 <span class="announcement-icon">📃</span>
-//                 <span>Important Announcement</span>
-//             </div>
+    // --- 4. 将 HTML 注入到页面中 ---
+    // 'beforeend' 表示将 HTML 添加到 body 元素的最后一个子元素之后。
+    document.body.insertAdjacentHTML('beforeend', announcementHTML);
 
-//             <div class="announcement-content">
-//                 <p>
-//                     The current online documentation is in the <strong>beta testing phase</strong>. Some content may still be under revision.
-//                 </p>
-                
-//                 <!-- Note: Inline styles are used here for simplicity. For larger projects, it's better to use CSS classes. -->
-//                 <p style="margin-top: 10px;">
-//                     Please refer to the <strong>latest PDF tutorial as the final standard</strong>. Thank you for your understanding and support!
-//                 </p>
-//             </div>
+    // --- 5. 获取元素并为关闭按钮添加事件监听器 ---
+    const announcementPanel = document.getElementById('custom-announcement');
+    const closeButton = document.getElementById('close-announcement');
 
-//             <!-- Visual separator for different sections. -->
-//             <hr>
+    // 健壮性检查：确保元素成功被获取，防止因ID错误等问题导致脚本中断。
+    if (announcementPanel && closeButton) {
+        // 为关闭按钮绑定点击事件。
+        closeButton.addEventListener('click', function() {
+            // 第一步：隐藏面板（和原来一样）。
+            announcementPanel.style.display = 'none';
 
-//             <!-- Second Section: Feature Guide -->
-//             <div class="announcement-title">
-//                 <span class="announcement-icon">📖</span>
-//                 <span>Feature Guide</span>
-//             </div>
+            // 第二步（核心优化）：将关闭状态记录到 sessionStorage 中。
+            // 这样，在当前浏览器会话中，即使用户跳转到其他页面，这个记录也会保留下来。
+            sessionStorage.setItem(announcementClosedKey, 'true');
 
-//             <div class="announcement-content">
-//                 <p>
-//                     1. The 🔍 icon on the right side of the page is for global search. Click it and enter a project number (e.g., fnk0019) to jump to the corresponding tutorial.
-//                 </p>
-//                 <p>
-//                     2. To download the offline version of a tutorial, click the download icon on the right side.
-//                 </p>
-//             </div>
-//         </div>
-//     `;
+            console.log('公告框已关闭，并将状态保存到 sessionStorage。');
+        });
+    } else {
+        // 如果找不到元素，在控制台打印警告，方便调试。
+        console.warn('未能找到公告框或其关闭按钮，功能可能无法正常工作。');
+    }
 
-
-//     // --- 2. Inject the HTML into the Page ---
-
-//     // `insertAdjacentHTML()` parses the 'announcementHTML' string and inserts the
-//     // resulting nodes into the DOM.
-//     // The 'beforeend' position inserts the HTML just inside the `<body>` element,
-//     // after its last child. This is generally more efficient and safer than
-//     // modifying the entire `document.body.innerHTML`.
-//     document.body.insertAdjacentHTML('beforeend', announcementHTML);
-
-
-//     // --- 3. Add Functionality to the Close Button ---
-
-//     // Get a reference to the panel and its close button using their unique IDs.
-//     const announcementPanel = document.getElementById('custom-announcement');
-//     const closeButton = document.getElementById('close-announcement');
-
-//     // Best Practice: Always check if the elements were successfully found before
-//     // trying to add event listeners to them. This prevents "null reference" errors
-//     // if the HTML failed to inject or if the IDs were mistyped.
-//     if (announcementPanel && closeButton) {
-        
-//         // Attach a 'click' event listener to the close button.
-//         closeButton.addEventListener('click', function() {
-//             // This anonymous function executes whenever the close button is clicked.
-//             // It hides the entire announcement panel by setting its CSS 'display' property to 'none'.
-//             announcementPanel.style.display = 'none';
-//         });
-        
-//     } else {
-//         // If the elements couldn't be found, log a warning to the browser console
-//         // to help with debugging.
-//         console.warn('Could not find the announcement panel or its close button. The feature might be broken.');
-//     }
-
-// });
+});
