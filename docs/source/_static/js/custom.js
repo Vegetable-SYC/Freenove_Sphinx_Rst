@@ -1345,77 +1345,93 @@ document.addEventListener('DOMContentLoaded', () => {
 
 /* ---------------------------------------------------------------------------------------------- */
 
-// 监听 DOMContentLoaded 事件，确保在整个 HTML 文档加载并解析完毕后才执行脚本。
-// 这样可以避免因元素不存在而导致的脚本错误。
-// document.addEventListener('DOMContentLoaded', function() {
+/**
+ * @fileoverview
+ * This script creates a dismissible announcement panel on the page.
+ * It uses sessionStorage to remember if the user has closed the panel
+ * during the current browser session, preventing it from reappearing
+* on page navigation or refresh.
+ */
 
-//     // --- 1. 定义一个用于 sessionStorage 的键名 ---
-//     // 这个键名是唯一的，用于在 sessionStorage 中存储和读取公告框的状态。
-//     const announcementClosedKey = 'isAnnouncementClosed';
+// Listen for the DOMContentLoaded event to ensure the script runs only after the
+// entire HTML document has been loaded and parsed. This prevents errors that
+// could occur if the script tries to manipulate DOM elements that do not yet exist.
+document.addEventListener('DOMContentLoaded', function() {
 
-//     // --- 2. 检查用户是否已经关闭过公告框 ---
-//     // 从 sessionStorage 中读取键名为 announcementClosedKey 的值。
-//     // 如果值为 'true'，说明用户在本会话中已经关闭过公告框。
-//     if (sessionStorage.getItem(announcementClosedKey) === 'true') {
-//         // 如果已经关闭过，则直接退出函数，不执行后面的创建和显示逻辑。
-//         return; 
-//     }
+    // --- 1. Define the Session Storage Key ---
+    // A unique key is used to store and retrieve the state of the announcement
+    // panel in the browser's sessionStorage.
+    const announcementClosedKey = 'isAnnouncementClosed';
 
-//     // --- 3. 定义公告框的 HTML 结构 ---
-//     // 只有在用户没有关闭过公告框的情况下，才会执行到这里。
-//     const announcementHTML = `
-//         <div id="custom-announcement" class="rtd-announcement-panel">
-//             <span id="close-announcement" class="announcement-close" title="关闭">×</span>
-//             <div class="announcement-title">
-//                 <span class="announcement-icon">📃</span>
-//                 <span>重要公告</span>
-//             </div>
-//             <div class="announcement-content">
-//                 <p>
-//                     当前线上文档正处于 <strong>测试阶段</strong>，部分内容可能仍在完善中。
-//                 </p>
-//                 <p style="margin-top: 10px;">
-//                     请<strong>以最新的 <a href="#">PDF 教程</a> 为最终标准</strong>。感谢您的理解与支持！
-//                 </p>
-//             </div>
-//             <hr>
-//             <div class="announcement-title">
-//                 <span class="announcement-icon">📖</span>
-//                 <span>功能说明</span>
-//             </div>
-//             <div class="announcement-content">
-//                 <p>
-//                     1、网页右侧🔍为全局搜索，点开后在输入框中输入fnk序号可以跳转到对应的教程中（例如fnk0019）。
-//                 </p>
-//                 <p>
-//                     2、如果需要下载该教程的离线HTML版本或EPUB格式，可以点击教程右侧的下载图标。
-//                 </p>
-//             </div>
-//         </div>
-//     `;
+    // --- 2. Check if the Panel Was Already Closed ---
+    // Retrieve the value for our key from sessionStorage.
+    // If the value is 'true', it means the user has already closed the panel
+    // during this session.
+    if (sessionStorage.getItem(announcementClosedKey) === 'true') {
+        // If it was closed, exit the function immediately. No further action is needed,
+        // and the panel will not be created or displayed.
+        return;
+    }
 
-//     // --- 4. 将 HTML 注入到页面中 ---
-//     // 'beforeend' 表示将 HTML 添加到 body 元素的最后一个子元素之后。
-//     document.body.insertAdjacentHTML('beforeend', announcementHTML);
+    // --- 3. Define the HTML Structure of the Announcement Panel ---
+    // This block is only executed if the user has not previously closed the panel.
+    // NOTE: The inner text content remains in Chinese as it was in the original source.
+    const announcementHTML = `
+        <div id="custom-announcement" class="rtd-announcement-panel">
+            <span id="close-announcement" class="announcement-close" title="Close">×</span>
+            <div class="announcement-title">
+                <span class="announcement-icon">📃</span>
+                <span>重要公告</span>
+            </div>
+            <div class="announcement-content">
+                <p>
+                    当前线上文档正处于 <strong>测试阶段</strong>，部分内容可能仍在完善中。
+                </p>
+                <p style="margin-top: 10px;">
+                    请<strong>以最新的 <a href="https://freenove.com/tutorial">PDF 教程</a> 为标准</strong>。感谢您的理解与支持！
+                </p>
+            </div>
+            <hr>
+            <div class="announcement-title">
+                <span class="announcement-icon">📖</span>
+                <span>功能说明</span>
+            </div>
+            <div class="announcement-content">
+                <p>
+                    1、网页右侧🔍为全局搜索，点击后在输入框中输入fnk序号可以跳转到对应的线上教程中（例如fnk0019）。
+                </p>
+                <p>
+                    2、如果需要下载该教程的离线HTML版本或EPUB格式，可以点击教程右侧的下载图标。
+                </p>
+            </div>
+        </div>
+    `;
 
-//     // --- 5. 获取元素并为关闭按钮添加事件监听器 ---
-//     const announcementPanel = document.getElementById('custom-announcement');
-//     const closeButton = document.getElementById('close-announcement');
+    // --- 4. Inject the HTML into the Page ---
+    // The HTML string is inserted at the end of the `<body>` element.
+    // 'beforeend' means it's added just before the closing </body> tag.
+    document.body.insertAdjacentHTML('beforeend', announcementHTML);
 
-//     // 健壮性检查：确保元素成功被获取，防止因ID错误等问题导致脚本中断。
-//     if (announcementPanel && closeButton) {
-//         // 为关闭按钮绑定点击事件。
-//         closeButton.addEventListener('click', function() {
-//             // 第一步：隐藏面板（和原来一样）。
-//             announcementPanel.style.display = 'none';
+    // --- 5. Get Element References and Add Event Listener ---
+    const announcementPanel = document.getElementById('custom-announcement');
+    const closeButton = document.getElementById('close-announcement');
 
-//             // 第二步（核心优化）：将关闭状态记录到 sessionStorage 中。
-//             // 这样，在当前浏览器会话中，即使用户跳转到其他页面，这个记录也会保留下来。
-//             sessionStorage.setItem(announcementClosedKey, 'true');
-//         });
-//     } else {
-//         // 如果找不到元素，在控制台打印警告，方便调试。
-//         console.warn('未能找到公告框或其关闭按钮，功能可能无法正常工作。');
-//     }
+    // Robustness check: Ensure the elements were successfully found in the DOM
+    // before trying to add event listeners to them. This prevents script errors.
+    if (announcementPanel && closeButton) {
+        // Attach a click event listener to the close button.
+        closeButton.addEventListener('click', function() {
+            // Action 1: Hide the panel from view.
+            announcementPanel.style.display = 'none';
 
-// });
+            // Action 2 (Key feature): Record the closed state in sessionStorage.
+            // This sets the key to 'true', so the check at the beginning of the
+            // script will prevent the panel from being shown again during this session.
+            sessionStorage.setItem(announcementClosedKey, 'true');
+        });
+    } else {
+        // If the elements could not be found, log a warning to the console
+        // to aid in debugging.
+        console.warn('Could not find the announcement panel or its close button. The feature may not work as expected.');
+    }
+});
