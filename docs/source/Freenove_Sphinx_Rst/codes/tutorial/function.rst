@@ -60,7 +60,7 @@
 
 RTD有三种离线保存的格式，分别是epub（电子书格式），html（网页格式），pdf（文档格式）
 
-对文档根目录下的**.readthedocs.yaml**文件进行修改
+对文档根目录下的 **.readthedocs.yaml** 文件进行修改
 
 这个代码的意思是，将文档生成epub和htmlzip格式的离线文件，编译将会被保存在build文件夹中
 
@@ -76,13 +76,17 @@ RTD有三种离线保存的格式，分别是epub（电子书格式），html（
 
     formats: all
 
-但是PDF的效果相当不理想，因此文档中只开放了epub和html两种格式，而下载按钮只支持下载html格式，想下载epub格式需要打开网址
+但是PDF的效果相当不理想，因此文档中只开放了epub和html两种格式
+
+不使用下载按钮也可以使用网址下载
+
+手动下载EPUB格式
 
 .. code-block:: bash
 
     https://docs.freenove.com/_/downloads/fnk0020/en/latest/epub/
 
-手动下载html格式
+手动下载HTML格式
 
 .. code-block:: bash
 
@@ -98,6 +102,8 @@ RTD有三种离线保存的格式，分别是epub（电子书格式），html（
 7.1.3 RTD新增功能-插件
 ====================================
 
+主要有以下功能：
+
 链接预览
 
 流量分析
@@ -105,3 +111,5 @@ RTD有三种离线保存的格式，分别是epub（电子书格式），html（
 文档通知
 
 全局搜索
+
+这些还不太了解，先不介绍
