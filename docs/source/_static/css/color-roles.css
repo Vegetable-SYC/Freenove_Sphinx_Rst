@@ -141,8 +141,10 @@
     font-size: xx-small;
 }
 
-.x-large-bold{
-    font-size: x-large;
-    font-weight: bold;
+.font-bolder{
+    font-weight: bolder;
 }
 
+.font-lighter{
+    font-weight: lighter;
+}
