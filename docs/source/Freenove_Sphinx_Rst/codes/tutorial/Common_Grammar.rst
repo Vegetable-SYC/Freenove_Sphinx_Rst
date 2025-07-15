@@ -1061,6 +1061,15 @@ text-center，可以和其他类叠加使用
     .. |List01| image:: ../_static/imgs/Environment/Envi01.png
     .. |List02| image:: ../_static/imgs/Environment/Envi02.png
 
+4.3.3 图片加外边框
+===================================
+
+::
+
+    .. image:: ../_static/imgs/freenove.png
+        :class: image-border
+        :width: 50%
+
 4.4 超链接
 **********************
 
