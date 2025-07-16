@@ -304,20 +304,23 @@ dl.py.function {
     border: 1px solid black;
     border-bottom: none !important;
     color: black;
-    padding: 0;
-    margin: 10px 0;
 }
 
-/* Spacing between empty function area and any element below */
-dl.py.function:not(:has(dd:not(:empty))){
-    margin-bottom: -9.6px !important;
+dl.py.function:has(dd:empty) {
+    border-top: none !important;
+    border-bottom: none !important;
+    border-right: none !important;
+}
+
+dl.py.function + dl.py.function {
+    margin-top: -13px !important;
 }
 
 /* Function Signature Area */
 dl.py.function dt.sig.sig-object.py {
     all: revert !important; 
     display: inline-block !important;
-    padding: 5px 5px !important;
+    padding: 6px 6px !important;
     background-color: #ff7b00 !important;
     border: 1px solid black !important;
     font-weight: bolder !important;
@@ -329,7 +332,8 @@ dl.py.function dt.sig.sig-object.py {
 
 /* Empty Function Signature Area */
 dl.py.function:has(dd:empty) > dt.sig.sig-object.py {
-    border-bottom: none !important; 
+    border-top: 1px solid black !important;
+    border-bottom: 1px solid black !important;
 }
 
 /* Bordered Content Area */
@@ -337,7 +341,6 @@ dl.py.function dd {
     border-bottom: 1px solid black;
     padding: 10px;
     margin: 0;
-    margin-top: -1px;
 }
 
 /* If content area is empty */
@@ -345,26 +348,30 @@ dl.py.function dd:empty {
     display: none;
 }
 
+
 /* C */
 /* Function Area */
 dl.c.function {
     border: 1px solid black;
     border-bottom: none !important;
     color: black;
-    padding: 0;
-    margin: 10px 0;
 }
 
-/* Spacing between empty function area and any element below */
-dl.c.function:not(:has(dd:not(:empty))){
-    margin-bottom: -9.6px !important;
+dl.c.function:has(dd:empty) {
+    border-top: none !important;
+    border-bottom: none !important;
+    border-right: none !important;
+}
+
+dl.c.function + dl.c.function {
+    margin-top: -13px !important;
 }
 
 /* Function Signature Area */
 dl.c.function dt.sig.sig-object.c {
     all: revert !important; 
     display: inline-block !important;
-    padding: 5px 5px !important;
+    padding: 6px 6px !important;
     background-color: #ff7b00 !important;
     border: 1px solid black !important;
     font-weight: bolder !important;
@@ -376,7 +383,8 @@ dl.c.function dt.sig.sig-object.c {
 
 /* Empty Function Signature Area */
 dl.c.function:has(dd:empty) > dt.sig.sig-object.c {
-    border-bottom: none !important; 
+    border-top: 1px solid black !important;
+    border-bottom: 1px solid black !important;
 }
 
 /* Bordered Content Area */
@@ -384,7 +392,6 @@ dl.c.function dd {
     border-bottom: 1px solid black;
     padding: 10px;
     margin: 0;
-    margin-top: -1px;
 }
 
 /* If content area is empty */
