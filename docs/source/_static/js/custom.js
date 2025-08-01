@@ -1396,3 +1396,230 @@ document.addEventListener('DOMContentLoaded', () => {
         console.error("A critical error occurred while initializing page controls:", error);
     }
 });
+
+function initializeGeminiChat() {
+
+    // --- 步骤1: 检查是否已初始化 ---
+    if (document.getElementById('gemini-chat-widget-container')) {
+        return;
+    }
+
+    // --- 步骤2: 定义常量和 HTML ---
+    const PROXY_API_URL = 'https://wenxin-proxy.syc-ai.workers.dev/'; 
+    const GEMINI_API_KEY_NAME = 'gemini_api_key';
+    const GEMINI_MODEL_NAME = 'gemini_selected_model';
+    const GEMINI_HISTORY_NAME = 'gemini_chat_history';
+
+    const GEMINI_MODELS = {
+        'gemma-3-27b-it': 'Gemma3 27b',
+        'gemini-1.5-flash-latest': 'Gemini 1.5 Flash',
+        'gemini-1.5-pro-latest': 'Gemini 1.5 Pro',
+        'gemini-pro': 'Gemini 1.0 Pro',
+    };
+    
+    const modelOptions = Object.keys(GEMINI_MODELS)
+      .map(key => `<option value="${key}">${GEMINI_MODELS[key]}</option>`)
+      .join('');
+      
+    const chatWidgetHTML = `
+      <div id="gemini-chat-widget-container">
+        <div class="ai-chat-widget">
+            <img src="https://cdn.jsdelivr.net/gh/Freenove/freenove-docs/docs/source/_static/images/freenove_logo_tag_icon.png" class="fnk-logo">
+        </div>
+        <div class="chat-window">
+            <div class="chat-header">
+                <span>Gemini AI 助手</span>
+                <select id="model-selector">${modelOptions}</select>
+                <svg id="clear-history-btn" title="清空对话记录" viewBox="0 0 24 24"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"></path></svg>
+                <span class="close-btn">✖</span>
+            </div>
+            <div class="chat-messages"></div>
+            <div class="chat-input-area">
+                <textarea id="chat-input" placeholder="输入您的问题..." rows="1"></textarea>
+                <button class="send-btn" title="发送"><svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"></path></svg></button>
+            </div>
+        </div>
+        <div class="api-key-modal">
+            <div class="api-key-modal-content">
+                <h3>配置 AI 助手 (Gemini)</h3>
+                <p>首次使用需要提供 Google AI Studio 的 API Key。<br>您的 Key 将仅保存在您的浏览器本地。</p>
+                <input type="password" id="api-key-input" placeholder="请粘贴 API Key">
+                <div id="api-key-error"></div>
+                <button id="save-api-key-btn">保存并开始</button>
+            </div>
+        </div>
+      </div>
+    `;
+
+    // --- 步骤3: 注入HTML并获取所有DOM元素 ---
+    document.body.insertAdjacentHTML('beforeend', chatWidgetHTML);
+
+    const modelSelector = document.getElementById('model-selector');
+    const clearHistoryBtn = document.getElementById('clear-history-btn');
+    const chatIcon = document.querySelector('.ai-chat-widget');
+    const chatWindow = document.querySelector('.chat-window');
+    const closeBtn = document.querySelector('.close-btn');
+    const messagesContainer = document.querySelector('.chat-messages');
+    const chatInput = document.getElementById('chat-input');
+    const sendBtn = document.querySelector('.send-btn');
+    const apiKeyModal = document.querySelector('.api-key-modal');
+    const apiKeyInput = document.getElementById('api-key-input');
+    const saveApiKeyBtn = document.getElementById('save-api-key-btn');
+    const apiKeyError = document.getElementById('api-key-error');
+
+    // --- 步骤4: 函数定义 ---
+    let conversationHistory = [];
+
+    const scrollToBottom = () => messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    
+    const addMessage = (text, ...classNames) => {
+        const messageDiv = document.createElement("div");
+        messageDiv.classList.add("message", ...classNames);
+
+        const formattedText = text
+            .replace(/\n+/g, "<br>") 
+            .replace(/`([^`]+)`/g, "<code>$1</code>")
+            .replace(/\*\*(.*?)\*\*/g,"<strong>$1</strong>");
+
+        messageDiv.innerHTML = formattedText;
+        
+        messagesContainer.appendChild(messageDiv);
+        scrollToBottom();
+        return messageDiv;
+    };
+    
+    const addLoadingIndicator = () => addMessage('<div class="typing-indicator"><span></span><span></span><span></span></div>', "ai", "loading");
+
+    const renderHistory = () => {
+        messagesContainer.innerHTML = ''; // 先清空现有显示
+        if (conversationHistory.length === 0) {
+             addMessage("hi! I'm Gemini。what can i do for you?", 'ai');
+        } else {
+             conversationHistory.forEach(msg => {
+                const role = msg.role === 'model' ? 'ai' : 'user';
+                const text = msg.parts?.[0]?.text || '';
+                addMessage(text, role);
+             });
+        }
+        scrollToBottom();
+    };
+
+    const getAIResponse = async (prompt, loadingIndicatorElement) => {
+        const apiKey = localStorage.getItem(GEMINI_API_KEY_NAME);
+        if (!apiKey) {
+            loadingIndicatorElement.remove();
+            addMessage("错误：尚未配置 Gemini API Key。", 'ai');
+            checkAndRequestApiKey();
+            return;
+        }
+        conversationHistory.push({ role: 'user', parts: [{ text: prompt }] });
+        const selectedModel = modelSelector.value;
+        const requestBody = {
+            model: selectedModel,
+            contents: conversationHistory,
+            safetySettings: [{ category: "HARM_CATEGORY_HARASSMENT", threshold: "BLOCK_NONE" }, { category: "HARM_CATEGORY_HATE_SPEECH", threshold: "BLOCK_NONE" }, { category: "HARM_CATEGORY_SEXUALLY_EXPLICIT", threshold: "BLOCK_NONE" }, { category: "HARM_CATEGORY_DANGEROUS_CONTENT", threshold: "BLOCK_NONE" }],
+        };
+        try {
+            const response = await fetch(PROXY_API_URL, { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Goog-Api-Key': apiKey }, body: JSON.stringify(requestBody) });
+            if (!response.ok) { let errorData; try { errorData = await response.json(); } catch (e) { throw new Error(`代理服务器错误 ${response.status}: ${response.statusText}`); } throw new Error(errorData?.error?.message || JSON.stringify(errorData)); }
+            const data = await response.json();
+            const aiReply = data.candidates?.[0]?.content?.parts?.[0]?.text;
+            if (aiReply === undefined) { if (data.promptFeedback?.blockReason) { throw new Error(`输入或输出被安全策略拦截: ${data.promptFeedback.blockReason}`); } throw new Error("API 响应格式不正确或内容为空。"); }
+            conversationHistory.push({ role: 'model', parts: [{ text: aiReply }] });
+            localStorage.setItem(GEMINI_HISTORY_NAME, JSON.stringify(conversationHistory));
+            loadingIndicatorElement.remove();
+            addMessage(aiReply, 'ai');
+        } catch (error) {
+            console.error('Fetch via proxy failed:', error);
+            conversationHistory.pop();
+            loadingIndicatorElement.remove();
+            addMessage(`抱歉，出错了。<br><b>错误详情:</b> ${error.message}`, 'ai');
+            if (error.message.includes("API key not valid")) { localStorage.removeItem(GEMINI_API_KEY_NAME); apiKeyModal.classList.add('visible'); }
+        }
+    };
+    
+    const handleSendMessage = async () => {
+        const userInput = chatInput.value.trim();
+        if(!userInput) return;
+        addMessage(userInput, "user");
+        chatInput.value="";
+        chatInput.style.height="auto";
+        const loadingIndicator = addLoadingIndicator();
+        await getAIResponse(userInput, loadingIndicator);
+    };
+
+    const clearHistory = () => { 
+        if (confirm("确定要清空所有对话记录吗？")) 
+        { 
+            conversationHistory = []; 
+            localStorage.removeItem(GEMINI_HISTORY_NAME); 
+            renderHistory(); 
+        } 
+    };
+    
+    const checkAndRequestApiKey = (onSuccess) => {
+        const apiKey = localStorage.getItem(GEMINI_API_KEY_NAME); 
+        apiKey ? onSuccess && onSuccess() : apiKeyModal.classList.add("visible") 
+    };
+
+    const saveApiKey = () => { 
+        const apiKey = apiKeyInput.value.trim(); 
+        if (apiKey) { 
+            localStorage.setItem(GEMINI_API_KEY_NAME, apiKey); 
+            apiKeyModal.classList.remove('visible'); 
+            toggleChatWindow(true); apiKeyError.style.display = "none" 
+        } else { 
+            apiKeyError.textContent = "API Key 不能为空！"; 
+            apiKeyError.style.display = "block" 
+        } 
+    };
+    
+    const toggleChatWindow = (show) => { 
+        show ? checkAndRequestApiKey(() => chatWindow.classList.add("visible")) : chatWindow.classList.remove("visible") 
+    };
+
+    // --- 步骤5: 初始化和绑定事件监听 ---
+
+    const savedHistory = localStorage.getItem(GEMINI_HISTORY_NAME);
+    if (savedHistory) {
+        try { conversationHistory = JSON.parse(savedHistory); } catch (e) { conversationHistory = []; }
+    }
+
+    const savedModel = localStorage.getItem(GEMINI_MODEL_NAME);
+    if (savedModel && GEMINI_MODELS[savedModel]) { modelSelector.value = savedModel; }
+    else { modelSelector.value = Object.keys(GEMINI_MODELS)[0]; }
+    
+    renderHistory();
+    
+    chatIcon.addEventListener('click', () => toggleChatWindow(true));
+    closeBtn.addEventListener('click', () => toggleChatWindow(false));
+    sendBtn.addEventListener('click', handleSendMessage);
+    chatInput.addEventListener('keydown', e => { e.key === 'Enter' && !e.shiftKey && (e.preventDefault(), handleSendMessage()) });
+    saveApiKeyBtn.addEventListener('click', saveApiKey);
+    modelSelector.addEventListener('change', () => {
+        localStorage.setItem(GEMINI_MODEL_NAME, modelSelector.value);
+        addMessage(`<i>切换为：${GEMINI_MODELS[modelSelector.value]}, 记录已清除</i>`, 'ai', 'system-info');
+        conversationHistory = [];
+        localStorage.removeItem(GEMINI_HISTORY_NAME);
+    });
+    clearHistoryBtn.addEventListener('click', clearHistory);
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    initializeGeminiChat();
+});
+
+const observer = new MutationObserver((mutations) => {
+    for (const mutation of mutations) {
+        if (mutation.type === 'childList' && mutation.addedNodes.length > 0) {
+            const mainContent = document.querySelector('[role="main"]');
+            if(mainContent && !document.getElementById('gemini-chat-widget-container')) {
+                //  console.log("检测到页面内容变化，重新初始化 Gemini 聊天组件...");
+                 initializeGeminiChat();
+                 break; 
+            }
+        }
+    }
+});
+
+observer.observe(document.body, { childList: true, subtree: true });
