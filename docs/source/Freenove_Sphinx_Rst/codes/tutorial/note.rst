@@ -155,3 +155,10 @@
 .. code-block:: console
 
     https://cdn.jsdelivr.net/gh/Freenove/freenove-docs@latest/docs/source/_static/css/custom.css
+
+8.5 Developer: Reload Window
+****************************************
+
+当本地编译时出现没有正确加载插件的时候，可以使用这个指令重新加载窗口，此时插件就会正确打开
+
+ctrl+shift+p, 输入**Developer: Reload Window**即可
